@@ -132,9 +132,31 @@
     .btn-myposts:hover { background: #e2e8f0; }
 
     .btn-chat {
+      position: relative;
       background: #f0fdf4;
       color: #16a34a;
       border: 1px solid #bbf7d0 !important;
+    }
+
+    .btn-chat .chat-badge {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      min-width: 18px;
+      height: 18px;
+      padding: 0 5px;
+      border-radius: 999px;
+      background: #ef4444;
+      color: white;
+      font-size: 12px;
+      line-height: 18px;
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .btn-chat.has-unread .chat-badge {
+      display: inline-flex;
     }
 
     .btn-profile {
@@ -1041,6 +1063,7 @@
   <link rel="stylesheet" href="/css/responsive-fixes.css">
 </head>
 <body>
+<script src="/socket.io/socket.io.js"></script>
 <script src="/js/auth.js"></script>
 <script>cekLogin();</script>
 
@@ -1050,14 +1073,14 @@
   <div class="navbar-menu">
     <button class="btn-upload" onclick="bukaModalUpload()">+ Jual Sekarang</button>
     <button class="btn-profile" id="btn-profile" type="button" onclick="toggleProfileMenu()">👤</button>
-    <button class="btn-chat" onclick="window.location.href='/views/chat.html'">💬 Chat</button>
+    <button class="btn-chat" id="btn-chat" onclick="window.location.href='/views/chat.html'">💬 Chat <span class="chat-badge" id="chat-badge">0</span></button>
     <button class="btn-logout" onclick="logout()">Keluar</button>
     <div class="profile-menu" id="profile-menu">
       <div class="profile-greeting">Halo, <strong id="nama-user"></strong></div>
-      <button type="button" onclick="lihatWishlist()">💗 Wishlist</button>
+      <button type="button" onclick="window.location.href='/views/profile.html'">✏️ Profile Saya</button>
       <button type="button" onclick="lihatPostinganSaya()">📦 Postingan Saya</button>
       <button type="button" onclick="window.location.href='/views/chat.html'">💬 Chat</button>
-      <button type="button" onclick="window.location.href='/views/profile.html'">✏️ Edit Profil</button>
+      <button type="button" onclick="lihatWishlist()">💗 Wishlist</button>
       <div class="menu-divider"></div>
       <div class="menu-title">Sortir Harga</div>
       <div class="menu-controls">
@@ -1560,6 +1583,51 @@ if (post.penjual_id == userId) {
     window.location.href = '/views/auth.html';
   }
 
+  async function updateChatBadge() {
+    const badge = document.getElementById('chat-badge');
+    const btnChat = document.getElementById('btn-chat');
+    if (!badge || !btnChat) return;
+
+    try {
+      const res = await fetch('/api/messages/threads', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (!res.ok) {
+        badge.style.display = 'none';
+        btnChat.classList.remove('has-unread');
+        return;
+      }
+
+      const threads = await res.json();
+      const totalUnread = threads.reduce((sum, thread) => sum + (thread.belum_dibaca || 0), 0);
+      if (totalUnread > 0) {
+        badge.textContent = totalUnread > 99 ? '99+' : totalUnread;
+        btnChat.classList.add('has-unread');
+      } else {
+        badge.textContent = '0';
+        btnChat.classList.remove('has-unread');
+      }
+    } catch (err) {
+      console.error('Gagal memperbarui badge chat:', err);
+      badge.style.display = 'none';
+      btnChat.classList.remove('has-unread');
+    }
+  }
+
+  function initChatNotifications() {
+    if (!userId) return;
+
+    const socket = io();
+    socket.on('connect', () => {
+      socket.emit('join', userId);
+    });
+
+    socket.on('new_message', () => {
+      updateChatBadge();
+    });
+  }
+
   // Tutup modal kalau klik di luar
   document.querySelectorAll('.modal-overlay').forEach(overlay => {
     overlay.addEventListener('click', e => {
@@ -1579,6 +1647,8 @@ if (post.penjual_id == userId) {
 
   // Load pertama kali
   loadPosts();
+  updateChatBadge();
+  initChatNotifications();
 </script>
 </body>
 </html>
