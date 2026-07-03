@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MarketPinang — Home</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html,
+    body {
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+    }
+
+    /* NAVBAR */
+    .navbar {
+      background: white;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.08);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      min-width: 0;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .navbar-logo { font-size: 22px; font-weight: 700; color: #2563eb; }
+
+    .navbar-menu { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; min-width: 0; justify-content: flex-end; width: 100%; max-width: 100%; position: relative; }
+
+    .navbar-menu button {
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s;
+      white-space: nowrap;
+      min-width: 0;
+      flex-shrink: 1;
+    }
+
+    .profile-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 16px 42px rgba(15,23,42,0.15);
+      padding: 14px;
+      min-width: 220px;
+      z-index: 150;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .profile-menu.show {
+      display: flex;
+    }
+
+    .profile-menu button,
+    .profile-menu select,
+    .profile-menu input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+      background: white;
+      color: #111827;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    .profile-menu button {
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      color: #111827;
+    }
+
+    .profile-menu button.logout-btn {
+      background: #fef2f2;
+      color: #dc2626;
+      border-color: #fecaca;
+    }
+
+    .profile-menu .menu-divider {
+      height: 1px;
+      background: #e2e8f0;
+      margin: 6px 0;
+    }
+
+    .profile-menu .menu-title {
+      font-size: 13px;
+      color: #475569;
+      margin-bottom: 4px;
+    }
+
+    .profile-menu .menu-controls {
+      display: grid;
+      gap: 8px;
+    }
+
+    .btn-upload {
+      background: #2563eb;
+      color: white;
+    }
+
+    .btn-upload:hover { background: #1d4ed8; }
+
+    .btn-myposts {
+      background: #f1f5f9;
+      color: #374151;
+    }
+
+    .btn-myposts:hover { background: #e2e8f0; }
+
+    .btn-chat {
+      background: #f0fdf4;
+      color: #16a34a;
+      border: 1px solid #bbf7d0 !important;
+    }
+
+    .btn-profile {
+      background: #eff6ff;
+      color: #2563eb;
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      border-radius: 50%;
+      min-width: 40px;
+      min-height: 40px;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .btn-profile-mobile {
+      display: none;
+      padding: 10px;
+      border-radius: 12px;
+      border: none;
+      background: #eff6ff;
+      color: #2563eb;
+      cursor: pointer;
+      font-size: 16px;
+      min-width: 44px;
+      min-height: 44px;
+    }
+
+    .profile-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 16px 42px rgba(15,23,42,0.15);
+      padding: 14px;
+      min-width: 240px;
+      z-index: 150;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .profile-menu.show {
+      display: flex;
+    }
+
+    .profile-menu button,
+    .profile-menu select,
+    .profile-menu input {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+      background: white;
+      color: #111827;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    .profile-menu button {
+      border: 1px solid #e2e8f0;
+      background: #f8fafc;
+      color: #111827;
+    }
+
+    .profile-menu button.logout-btn {
+      background: #fef2f2;
+      color: #dc2626;
+      border-color: #fecaca;
+    }
+
+    .profile-menu .menu-divider {
+      height: 1px;
+      background: #e2e8f0;
+      margin: 6px 0;
+    }
+
+    .profile-menu .menu-title {
+      font-size: 13px;
+      color: #475569;
+      margin-bottom: 4px;
+    }
+
+    .profile-menu .menu-controls {
+      display: grid;
+      gap: 8px;
+    }
+
+    .btn-logout {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+
+    .user-info {
+      font-size: 13px;
+      color: #64748b;
+      margin-right: 4px;
+    }
+
+    /* SEARCH & FILTER */
+    .search-section {
+      background: white;
+      padding: 20px 24px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .search-bar {
+      display: flex;
+      gap: 10px;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .search-bar input {
+      flex: 1;
+      padding: 11px 16px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .search-bar input:focus { border-color: #2563eb; }
+
+    .search-bar button {
+      padding: 11px 20px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+
+    .kategori-list {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      max-width: 700px;
+      margin: 12px auto 0;
+    }
+
+    .kategori-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1.5px solid #e2e8f0;
+      background: white;
+      cursor: pointer;
+      font-size: 13px;
+      color: #374151;
+      transition: all 0.2s;
+    }
+
+    .kategori-btn.active {
+      background: #2563eb;
+      color: white;
+      border-color: #2563eb;
+    }
+
+    /* GRID POSTINGAN */
+    .main { padding: 24px; max-width: 1200px; margin: 0 auto; }
+
+    .section-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 16px;
+    }
+
+    .posts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    .post-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .post-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    }
+
+    .post-foto {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      background: #f1f5f9;
+    }
+
+    .post-foto-placeholder {
+      width: 100%;
+      height: 180px;
+      background: linear-gradient(135deg, #e0e7ff, #f0f9ff);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+    }
+
+    .post-info { padding: 14px; }
+
+    .post-kategori {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: #2563eb;
+      background: #eff6ff;
+      padding: 2px 8px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-bottom: 6px;
+    }
+
+    .post-judul {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .post-harga {
+      font-size: 16px;
+      font-weight: 700;
+      color: #16a34a;
+      margin-bottom: 6px;
+    }
+
+    .post-penjual {
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #94a3b8;
+    }
+
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #94a3b8;
+    }
+
+    /* MODAL UPLOAD */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.show { display: flex; }
+
+    .modal {
+      background: white;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 480px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 28px;
+      margin: 16px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .modal-header h2 { font-size: 18px; color: #1e293b; }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 22px;
+      cursor: pointer;
+      color: #64748b;
+      line-height: 1;
+    }
+
+    .field { margin-bottom: 14px; }
+
+    .field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 5px;
+    }
+
+    .field input, .field textarea, .field select {
+      width: 100%;
+      padding: 10px 13px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .field input:focus, .field textarea:focus, .field select:focus {
+      border-color: #2563eb;
+    }
+
+    .field textarea { resize: vertical; min-height: 80px; }
+
+    .btn-submit {
+      width: 100%;
+      padding: 12px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 4px;
+    }
+
+    .btn-submit:disabled { background: #93c5fd; cursor: not-allowed; }
+
+    .alert {
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 14px;
+      display: none;
+    }
+
+    .alert.error { background: #fef2f2; color: #dc2626; }
+    .alert.success { background: #f0fdf4; color: #16a34a; }
+
+    /* MODAL DETAIL */
+    .detail-foto {
+      width: 100%;
+      max-height: 280px;
+      object-fit: cover;
+      border-radius: 10px;
+      margin-bottom: 16px;
+    }
+
+    .detail-harga {
+      font-size: 24px;
+      font-weight: 700;
+      color: #16a34a;
+      margin: 8px 0;
+    }
+
+    .detail-desc {
+      color: #475569;
+      font-size: 14px;
+      line-height: 1.6;
+      margin: 12px 0;
+    }
+
+    .btn-hubungi {
+      width: 100%;
+      padding: 12px;
+      background: #16a34a;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+
+    .btn-hubungi:hover { background: #15803d; }
+
+    .wishlist-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .wishlist-item {
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 1px 10px rgba(15, 23, 42, 0.06);
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+
+    .wishlist-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.12);
+    }
+
+    .wishlist-item-img {
+      width: 100%;
+      min-height: 160px;
+      max-height: 180px;
+      object-fit: cover;
+      background: #f8fafc;
+    }
+
+    .wishlist-item-content {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .wishlist-item-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #1f2937;
+      line-height: 1.35;
+      min-height: 42px;
+    }
+
+    .wishlist-item-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      color: #475569;
+      font-size: 13px;
+    }
+
+    .wishlist-item-meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .wishlist-item-price {
+      font-size: 17px;
+      font-weight: 700;
+      color: #16a34a;
+    }
+
+    .wishlist-item-desc {
+      color: #475569;
+      font-size: 14px;
+      line-height: 1.5;
+      max-height: 54px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .wishlist-item-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: auto;
+    }
+
+    .wishlist-item-actions button {
+      flex: 1;
+      min-height: 44px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    .wishlist-item-actions .btn-wishlist-contact {
+      background: #2563eb;
+      color: white;
+    }
+
+    .wishlist-item-actions .btn-wishlist-contact:hover {
+      background: #1d4ed8;
+    }
+
+    .wishlist-item-actions .btn-wishlist-remove {
+      background: #f8fafc;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+    }
+
+    /* MOBILE FIRST - RESPONSIVE */
+    @media (max-width: 768px) {
+      * { font-size: 16px; } /* Prevent zoom on input */
+
+      body { font-size: 14px; }
+
+      .navbar {
+        padding: 12px 16px;
+        gap: 8px;
+        flex-wrap: wrap;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+
+      .navbar-logo {
+        font-size: 20px;
+        font-weight: 700;
+        width: 100%;
+        margin-bottom: 4px;
+      }
+
+      .navbar-menu {
+        width: 100%;
+        gap: 6px;
+        align-items: stretch;
+        justify-content: flex-start;
+        position: relative;
+      }
+
+      .navbar-menu button {
+        padding: 10px 12px;
+        font-size: 13px;
+        border-radius: 8px;
+        flex: 1;
+        min-height: 44px; /* Touch target minimum */
+        white-space: nowrap;
+        min-width: 0;
+      }
+
+      .btn-profile {
+        display: inline-flex;
+        flex: 0 0 auto;
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        min-height: 40px;
+        padding: 0;
+        border-radius: 50%;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .btn-chat,
+      .btn-logout {
+        display: none;
+      }
+
+      .btn-profile-mobile {
+        display: none;
+      }
+
+      .user-info {
+        font-size: 13px;
+        width: 100%;
+        margin-bottom: 6px;
+      }
+
+      /* SEARCH SECTION */
+      .search-section {
+        padding: 14px 16px;
+        background: white;
+        border-bottom: 1px solid #e2e8f0;
+      }
+
+      .search-bar {
+        flex-direction: column;
+        gap: 8px;
+        max-width: 100%;
+      }
+
+      .search-bar input,
+      .search-bar button {
+        width: 100%;
+        padding: 12px 14px;
+        font-size: 16px; /* Prevent zoom */
+        border-radius: 8px;
+        min-height: 44px;
+      }
+
+      .search-bar button {
+        background: #2563eb;
+        color: white;
+        font-weight: 600;
+      }
+
+      .kategori-list {
+        margin-top: 10px;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .kategori-btn {
+        padding: 8px 14px;
+        font-size: 13px;
+        border-radius: 20px;
+        min-height: 36px;
+        display: flex;
+        align-items: center;
+      }
+
+      /* MAIN CONTENT */
+      .main {
+        padding: 12px;
+      }
+
+      .section-title {
+        font-size: 16px;
+        margin-bottom: 12px;
+      }
+
+      /* GRID POSTINGAN */
+      .posts-grid {
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 12px;
+      }
+
+      .post-card {
+        border-radius: 10px;
+      }
+
+      .post-foto {
+        height: 140px;
+      }
+
+      .wishlist-grid {
+        grid-template-columns: repeat(1, 1fr);
+      }
+
+      .wishlist-item {
+        border-radius: 12px;
+      }
+
+      .wishlist-item-img {
+        min-height: 140px;
+        max-height: 160px;
+      }
+
+      .post-info {
+        padding: 12px;
+      }
+
+      .post-kategori {
+        font-size: 10px;
+        padding: 2px 8px;
+        margin-bottom: 6px;
+      }
+
+      .post-judul {
+        font-size: 14px;
+        margin-bottom: 4px;
+      }
+
+      .post-harga {
+        font-size: 15px;
+        margin-bottom: 6px;
+      }
+
+      .post-penjual {
+        font-size: 12px;
+      }
+
+      /* MODAL */
+      .modal-overlay {
+        padding: 12px;
+      }
+
+      .modal {
+        width: 100%;
+        max-width: 100%;
+        padding: 20px;
+        border-radius: 12px;
+      }
+
+      .modal-header {
+        margin-bottom: 16px;
+      }
+
+      .modal-header h2 {
+        font-size: 18px;
+      }
+
+      .modal-close {
+        font-size: 24px;
+      }
+
+      .field {
+        margin-bottom: 14px;
+      }
+
+      .field label {
+        font-size: 13px;
+        margin-bottom: 6px;
+      }
+
+      .field input,
+      .field textarea,
+      .field select {
+        padding: 12px 14px;
+        font-size: 16px; /* Prevent zoom */
+        border-radius: 8px;
+        min-height: 44px;
+      }
+
+      .field textarea {
+        min-height: 100px;
+      }
+
+      .btn-submit {
+        min-height: 44px;
+        font-size: 15px;
+        margin-top: 8px;
+      }
+
+      /* DETAIL MODAL */
+      .detail-foto {
+        max-height: 200px;
+        margin-bottom: 12px;
+      }
+
+      .detail-harga {
+        font-size: 20px;
+        margin: 10px 0;
+      }
+
+      .detail-desc {
+        font-size: 13px;
+        line-height: 1.6;
+        margin: 10px 0;
+      }
+
+      .btn-hubungi {
+        min-height: 44px;
+        font-size: 15px;
+      }
+
+      /* POSTINGAN SAYA MODAL */
+      #myposts-container {
+        max-height: 400px;
+        overflow-y: auto;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .navbar {
+        padding: 10px 12px;
+      }
+
+      .navbar-logo {
+        font-size: 18px;
+      }
+
+      .navbar-menu button {
+        padding: 8px 10px;
+        font-size: 12px;
+        min-height: 40px;
+      }
+
+      .btn-profile {
+        display: inline-flex;
+      }
+
+      .btn-chat,
+      .btn-logout,
+      .btn-profile-mobile {
+        display: none;
+      }
+
+      .search-bar input,
+      .search-bar button {
+        padding: 11px 12px;
+        font-size: 15px;
+        min-height: 40px;
+      }
+
+      .kategori-btn {
+        padding: 7px 12px;
+        font-size: 12px;
+        min-height: 32px;
+      }
+
+      .posts-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+
+      .post-foto {
+        height: 120px;
+      }
+
+      .wishlist-item {
+        border-radius: 12px;
+      }
+
+      .wishlist-item-img {
+        min-height: 120px;
+        max-height: 140px;
+      }
+
+      .post-info {
+        padding: 10px;
+      }
+
+      .post-judul {
+        font-size: 13px;
+      }
+
+      .post-harga {
+        font-size: 14px;
+      }
+
+      .modal {
+        padding: 16px;
+      }
+
+      .field input,
+      .field textarea,
+      .field select {
+        padding: 11px 12px;
+        font-size: 16px;
+        min-height: 40px;
+      }
+
+      .alert {
+        padding: 10px 12px;
+        font-size: 12px;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="/css/responsive-fixes.css">
+</head>
+<body>
+<script src="/js/auth.js"></script>
+<script>cekLogin();</script>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="navbar-logo">🛍️ MarketPinang</div>
+  <div class="navbar-menu">
+    <span class="user-info">Halo, <strong id="nama-user"></strong></span>
+    <button class="btn-upload" onclick="bukaModalUpload()">+ Jual Sekarang</button>
+    <button class="btn-profile" id="btn-profile" type="button" onclick="toggleProfileMenu()">👤</button>
+    <button class="btn-chat" onclick="window.location.href='/views/chat.html'">💬 Chat</button>
+    <button class="btn-logout" onclick="logout()">Keluar</button>
+    <div class="profile-menu" id="profile-menu">
+      <button type="button" onclick="lihatWishlist()">💗 Wishlist</button>
+      <button type="button" onclick="lihatPostinganSaya()">📦 Postingan Saya</button>
+      <button type="button" onclick="window.location.href='/views/chat.html'">💬 Chat</button>
+      <button type="button" onclick="window.location.href='/views/profile.html'">✏️ Edit Profil</button>
+      <div class="menu-divider"></div>
+      <div class="menu-title">Sortir Harga</div>
+      <div class="menu-controls">
+        <select id="filter-sort">
+          <option value="terbaru">🕒 Terbaru</option>
+          <option value="termurah">💸 Termurah</option>
+          <option value="termahal">💰 Termahal</option>
+        </select>
+        <input type="number" id="filter-harga-min" placeholder="Harga min">
+        <input type="number" id="filter-harga-max" placeholder="Harga max">
+        <button type="button" onclick="cariPost()">Terapkan</button>
+      </div>
+      <button type="button" class="logout-btn" onclick="logout()">⛔ Keluar</button>
+    </div>
+  </div>
+</nav>
+
+<!-- SEARCH -->
+<div class="search-section">
+  <div class="search-bar">
+    <input type="text" id="input-search" placeholder="Cari barang...">
+    <button onclick="cariPost()">🔍 Cari</button>
+  </div>
+  <div class="kategori-list">
+    <button class="kategori-btn active" onclick="filterKategori('semua', this)">Semua</button>
+    <button class="kategori-btn" onclick="filterKategori('elektronik', this)">📱 Elektronik</button>
+    <button class="kategori-btn" onclick="filterKategori('fashion', this)">👗 Fashion</button>
+    <button class="kategori-btn" onclick="filterKategori('kendaraan', this)">🚗 Kendaraan</button>
+    <button class="kategori-btn" onclick="filterKategori('rumah', this)">🏠 Rumah & Taman</button>
+    <button class="kategori-btn" onclick="filterKategori('hobi', this)">🎮 Hobi</button>
+    <button class="kategori-btn" onclick="filterKategori('lainnya', this)">📦 Lainnya</button>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main">
+  <div class="section-title" id="section-title">Semua Postingan</div>
+  <div id="posts-container" class="posts-grid">
+    <div class="loading">Memuat postingan...</div>
+  </div>
+</div>
+
+<!-- MODAL UPLOAD -->
+<div class="modal-overlay" id="modal-upload">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>📦 Jual Barang</h2>
+      <button class="modal-close" onclick="tutupModal('modal-upload')">✕</button>
+    </div>
+    <div id="alert-upload" class="alert"></div>
+    <div class="field">
+      <label>Judul Iklan</label>
+      <input type="text" id="up-judul" placeholder="Contoh: iPhone 13 Pro 256GB">
+    </div>
+    <div class="field">
+      <label>Kategori</label>
+      <select id="up-kategori">
+        <option value="">-- Pilih Kategori --</option>
+        <option value="elektronik">📱 Elektronik</option>
+        <option value="fashion">👗 Fashion</option>
+        <option value="kendaraan">🚗 Kendaraan</option>
+        <option value="rumah">🏠 Rumah & Taman</option>
+        <option value="hobi">🎮 Hobi</option>
+        <option value="lainnya">📦 Lainnya</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Harga (Rp)</label>
+      <input type="number" id="up-harga" placeholder="Contoh: 5000000">
+    </div>
+    <div class="field">
+      <label>Deskripsi</label>
+      <textarea id="up-deskripsi" placeholder="Jelaskan kondisi, spesifikasi, dll..."></textarea>
+    </div>
+    <div class="field">
+      <label>Foto Barang (opsional, max 5MB)</label>
+      <input type="file" id="up-foto" accept="image/*">
+    </div>
+    <button class="btn-submit" id="btn-submit-upload" onclick="uploadPost()">Kirim untuk Direview</button>
+  </div>
+</div>
+
+<!-- MODAL DETAIL POSTINGAN -->
+<div class="modal-overlay" id="modal-detail">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="detail-judul"></h2>
+      <button class="modal-close" onclick="tutupModal('modal-detail')">✕</button>
+    </div>
+    <div id="detail-foto-container"></div>
+    <div class="post-kategori" id="detail-kategori"></div>
+    <div class="detail-harga" id="detail-harga"></div>
+    <div class="detail-desc" id="detail-desc"></div>
+    <div style="font-size:13px;color:#64748b" id="detail-penjual"></div>
+    <button class="btn-hubungi" id="btn-hubungi">💬 Hubungi Penjual</button>
+  </div>
+</div>
+
+<!-- MODAL POSTINGAN SAYA -->
+<div class="modal-overlay" id="modal-myposts">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>📦 Postingan Saya</h2>
+      <button class="modal-close" onclick="tutupModal('modal-myposts')">✕</button>
+    </div>
+    <div id="myposts-container"></div>
+  </div>
+</div>
+
+<script>
+  // Cek login
+  const token = localStorage.getItem('token');
+  const namaUser = localStorage.getItem('nama');
+  const userId = localStorage.getItem('userId');
+
+  if (!token) window.location.href = '/views/auth.html';
+  document.getElementById('nama-user').textContent = namaUser;
+
+  let kategoriAktif = 'semua';
+  let searchAktif = '';
+  let sortAktif = 'terbaru';
+  let hargaMinAktif = '';
+  let hargaMaxAktif = '';
+
+  // Load postingan
+  async function loadPosts() {
+    const container = document.getElementById('posts-container');
+    container.innerHTML = '<div class="loading">Memuat postingan...</div>';
+
+    let url = `/api/posts?kategori=${kategoriAktif}`;
+    if (searchAktif) url += `&search=${encodeURIComponent(searchAktif)}`;
+    if (sortAktif) url += `&sort=${encodeURIComponent(sortAktif)}`;
+    if (hargaMinAktif) url += `&harga_min=${encodeURIComponent(hargaMinAktif)}`;
+    if (hargaMaxAktif) url += `&harga_max=${encodeURIComponent(hargaMaxAktif)}`;
+
+    try {
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const posts = await res.json();
+
+      if (posts.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state" style="grid-column:1/-1">
+            <div class="icon">🔍</div>
+            <div>Belum ada postingan</div>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = posts.map(post => `
+        <div class="post-card" onclick="lihatDetail(${post.id})">
+          ${post.foto
+            ? `<img class="post-foto" src="${post.foto}" alt="${post.judul}">`
+            : `<div class="post-foto-placeholder">📦</div>`
+          }
+          <div class="post-info">
+            <div class="post-kategori">${post.kategori}</div>
+            <div class="post-judul">${post.judul}</div>
+            <div class="post-harga">Rp ${Number(post.harga).toLocaleString('id-ID')}</div>
+            <div class="post-penjual">👤 ${post.nama_penjual}</div>
+            <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#64748b">
+              <span>${post.status === 'sold' ? '✅ Terjual' : '📦 Tersedia'}</span>
+              <button type="button" onclick="event.stopPropagation();toggleWishlist(${post.id}, this)" style="border:none;background:${post.is_wishlist ? '#fef2f2' : '#f8fafc'};color:${post.is_wishlist ? '#dc2626' : '#64748b'};padding:4px 8px;border-radius:999px;cursor:pointer">${post.is_wishlist ? '💖' : '🤍'}</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    } catch {
+      container.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div>Gagal memuat postingan</div></div>';
+    }
+  }
+
+  // Filter kategori
+  function filterKategori(kat, el) {
+    kategoriAktif = kat;
+    document.querySelectorAll('.kategori-btn').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    document.getElementById('section-title').textContent =
+      kat === 'semua' ? 'Semua Postingan' : `Kategori: ${kat}`;
+    loadPosts();
+  }
+
+  // Search
+  function cariPost() {
+    searchAktif = document.getElementById('input-search').value;
+    sortAktif = document.getElementById('filter-sort').value;
+    hargaMinAktif = document.getElementById('filter-harga-min').value;
+    hargaMaxAktif = document.getElementById('filter-harga-max').value;
+    loadPosts();
+  }
+
+  document.getElementById('input-search').addEventListener('keydown', e => {
+    if (e.key === 'Enter') cariPost();
+  });
+
+  // Lihat detail
+  async function lihatDetail(id) {
+    const res = await fetch(`/api/posts/${id}`);
+    const post = await res.json();
+
+    document.getElementById('detail-judul').textContent = post.judul;
+    document.getElementById('detail-kategori').textContent = post.kategori;
+    document.getElementById('detail-harga').textContent = `Rp ${Number(post.harga).toLocaleString('id-ID')}`;
+    document.getElementById('detail-desc').textContent = post.deskripsi;
+    const detailPenjual = document.getElementById('detail-penjual');
+    detailPenjual.innerHTML = '';
+    const sellerLabel = document.createElement('span');
+    sellerLabel.textContent = '👤 Dijual oleh: ';
+    const sellerLink = document.createElement('a');
+    sellerLink.href = `/views/profile.html?id=${post.penjual_id}`;
+    sellerLink.textContent = post.nama_penjual;
+    sellerLink.className = 'seller-profile-link';
+    sellerLink.style = 'color:#2563eb;text-decoration:none;font-weight:600;cursor:pointer;';
+    detailPenjual.appendChild(sellerLabel);
+    detailPenjual.appendChild(sellerLink);
+
+    const fotoContainer = document.getElementById('detail-foto-container');
+    fotoContainer.innerHTML = post.foto
+      ? `<img class="detail-foto" src="${post.foto}">`
+      : '';
+
+    const btnHubungi = document.getElementById('btn-hubungi');
+if (post.penjual_id == userId) {
+  btnHubungi.style.display = 'none';
+} else {
+  btnHubungi.style.display = 'block';
+  btnHubungi.onclick = async () => {
+    try {
+      btnHubungi.disabled = true;
+      btnHubungi.textContent = 'Membuka chat...';
+      
+      // Buat chat thread untuk post ini
+      const res = await fetch('/api/chat/thread', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          post_id: post.id,
+          user2_id: post.penjual_id
+        })
+      });
+      
+      if (!res.ok) {
+        throw new Error('Gagal membuat chat');
+      }
+      
+      const thread = await res.json();
+      
+      // Simpan ke localStorage
+      localStorage.setItem('chat_dengan', post.penjual_id);
+      localStorage.setItem('chat_nama', post.nama_penjual);
+      localStorage.setItem('chat_role', 'user');
+      localStorage.setItem('chat_thread_id', thread.id);
+      localStorage.setItem('chat_post_id', post.id);
+      localStorage.setItem('chat_post_judul', post.judul);
+      localStorage.setItem('chat_post_harga', post.harga);
+      localStorage.setItem('chat_post_foto', post.foto || '');
+      localStorage.setItem('chat_post_deskripsi', post.deskripsi);
+      
+      // Redirect ke chat
+      window.location.href = '/views/chat.html';
+    } catch (err) {
+      btnHubungi.disabled = false;
+      btnHubungi.textContent = '💬 Hubungi Penjual';
+      alert('❌ Gagal membuka chat: ' + err.message);
+    }
+  };
+}
+
+    bukaModal('modal-detail');
+  }
+
+  // Postingan saya
+  async function lihatPostinganSaya() {
+    const res = await fetch('/api/posts/saya', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const posts = await res.json();
+    const container = document.getElementById('myposts-container');
+
+    if (posts.length === 0) {
+      container.innerHTML = '<div class="empty-state"><div class="icon">📦</div><div>Belum ada postingan</div></div>';
+    } else {
+      container.innerHTML = posts.map(post => `
+        <div style="padding:12px;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:10px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <div style="font-weight:600;color:#1e293b">${post.judul}</div>
+              <div style="font-size:13px;color:#64748b;margin-top:2px">Rp ${Number(post.harga).toLocaleString('id-ID')}</div>
+            </div>
+            <span style="font-size:12px;padding:3px 10px;border-radius:20px;font-weight:500;
+              background:${post.status==='approved'?'#f0fdf4':post.status==='pending'?'#fffbeb':'#fef2f2'};
+              color:${post.status==='approved'?'#16a34a':post.status==='pending'?'#d97706':'#dc2626'}">
+              ${post.status==='approved'?'✅ Aktif':post.status==='pending'?'⏳ Menunggu':'❌ Ditolak'}
+            </span>
+          </div>
+          ${post.status==='rejected' && post.alasan_reject
+            ? `<div style="font-size:12px;color:#dc2626;margin-top:6px">Alasan: ${post.alasan_reject}</div>`
+            : ''}
+          <button onclick="hapusPost(${post.id})" style="margin-top:10px;padding:6px 14px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:6px;cursor:pointer;font-size:13px">
+            Hapus
+          </button>
+        </div>
+      `).join('');
+    }
+
+    bukaModal('modal-myposts');
+  }
+
+  async function toggleWishlist(id, btn) {
+    const res = await fetch(`/api/posts/${id}/wishlist`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (res.ok) {
+      btn.textContent = data.added ? '💖' : '🤍';
+      btn.style.background = data.added ? '#fef2f2' : '#f8fafc';
+      btn.style.color = data.added ? '#dc2626' : '#64748b';
+      alert(data.message);
+    }
+  }
+
+  async function lihatWishlist() {
+    const res = await fetch('/api/posts/wishlist', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const posts = await res.json();
+    const container = document.getElementById('myposts-container');
+
+    if (posts.length === 0) {
+      container.innerHTML = '<div class="empty-state"><div class="icon">💗</div><div>Wishlist Anda masih kosong</div></div>';
+    } else {
+      container.innerHTML = `
+        <div class="wishlist-grid">
+          ${posts.map(post => `
+            <div class="wishlist-item" onclick="lihatDetail(${post.id})">
+              ${post.foto
+                ? `<img class="wishlist-item-img" src="${post.foto}" alt="${post.judul}">`
+                : `<div class="wishlist-item-img" style="display:flex;align-items:center;justify-content:center;font-size:28px;">📦</div>`
+              }
+              <div class="wishlist-item-content">
+                <div class="wishlist-item-title">${post.judul}</div>
+                <div class="wishlist-item-meta">
+                  <span>👤 ${post.nama_penjual}</span>
+                  <span class="wishlist-item-price">Rp ${Number(post.harga).toLocaleString('id-ID')}</span>
+                </div>
+                <div class="wishlist-item-desc">${post.deskripsi || 'Deskripsi tidak tersedia'}</div>
+                <div class="wishlist-item-actions">
+                  <button type="button" class="btn-wishlist-contact" data-post-id="${post.id}" data-penjual-id="${post.penjual_id || post.user_id}" onclick="event.stopPropagation();hubungiPenjualFromButton(this)">Hubungi Penjual</button>
+                  <button type="button" class="btn-wishlist-remove" onclick="event.stopPropagation();toggleWishlist(${post.id}, this)">Hapus</button>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>`;
+    }
+
+    bukaModal('modal-myposts');
+    document.querySelector('#modal-myposts .modal-header h2').textContent = '💗 Wishlist Saya';
+  }
+
+  function hubungiPenjualFromButton(button) {
+    const postId = button.dataset.postId;
+    const penjualId = button.dataset.penjualId;
+    hubungiPenjual(postId, penjualId);
+  }
+
+  async function hubungiPenjual(postId, penjualId) {
+    if (!penjualId) {
+      alert('Data penjual tidak tersedia. Coba muat ulang halaman.');
+      return;
+    }
+
+    console.log('hubungiPenjual', { postId, penjualId });
+
+    try {
+      const resPost = await fetch(`/api/posts/${postId}`);
+      if (!resPost.ok) {
+        const text = await resPost.text();
+        throw new Error(text || 'Postingan tidak ditemukan');
+      }
+      const post = await resPost.json();
+
+      const res = await fetch('/api/chat/thread', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ post_id: postId, user2_id: penjualId })
+      });
+      const text = await res.text();
+      let thread;
+      try {
+        thread = JSON.parse(text);
+      } catch {
+        throw new Error(text || 'Respons server tidak valid');
+      }
+
+      if (!res.ok) {
+        throw new Error(thread.error || thread.message || 'Gagal membuat chat');
+      }
+
+      localStorage.setItem('chat_dengan', post.penjual_id);
+      localStorage.setItem('chat_nama', post.nama_penjual);
+      localStorage.setItem('chat_role', 'user');
+      localStorage.setItem('chat_thread_id', thread.id);
+      localStorage.setItem('chat_post_id', post.id);
+      localStorage.setItem('chat_post_judul', post.judul);
+      localStorage.setItem('chat_post_harga', post.harga);
+      localStorage.setItem('chat_post_foto', post.foto || '');
+      localStorage.setItem('chat_post_deskripsi', post.deskripsi);
+
+      window.location.href = '/views/chat.html';
+    } catch (err) {
+      alert('❌ Gagal membuka chat: ' + err.message);
+    }
+  }
+
+  // Hapus post
+  async function hapusPost(id) {
+    if (!confirm('Yakin mau hapus postingan ini?')) return;
+    const res = await fetch(`/api/posts/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (res.ok) {
+      lihatPostinganSaya();
+      loadPosts();
+    }
+  }
+
+  // Upload post
+  async function uploadPost() {
+    const judul = document.getElementById('up-judul').value;
+    const kategori = document.getElementById('up-kategori').value;
+    const harga = document.getElementById('up-harga').value;
+    const deskripsi = document.getElementById('up-deskripsi').value;
+    const foto = document.getElementById('up-foto').files[0];
+
+    const formData = new FormData();
+    formData.append('judul', judul);
+    formData.append('kategori', kategori);
+    formData.append('harga', harga);
+    formData.append('deskripsi', deskripsi);
+    if (foto) formData.append('foto', foto);
+
+    const btn = document.getElementById('btn-submit-upload');
+    btn.disabled = true;
+    btn.textContent = 'Mengirim...';
+
+    try {
+      const res = await fetch('/api/posts', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        showAlert('alert-upload', data.error, 'error');
+      } else {
+        showAlert('alert-upload', '✅ Postingan dikirim! Menunggu persetujuan admin.', 'success');
+        setTimeout(() => tutupModal('modal-upload'), 1500);
+      }
+    } catch {
+      showAlert('alert-upload', 'Gagal terhubung ke server', 'error');
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Kirim untuk Direview';
+  }
+
+  // Helpers
+  function bukaModal(id) { document.getElementById(id).classList.add('show'); }
+  function tutupModal(id) { document.getElementById(id).classList.remove('show'); }
+  function bukaModalUpload() { bukaModal('modal-upload'); }
+
+  function showAlert(id, pesan, tipe) {
+    const el = document.getElementById(id);
+    el.textContent = pesan;
+    el.className = `alert ${tipe}`;
+    el.style.display = 'block';
+  }
+
+  function toggleProfileMenu() {
+    document.getElementById('profile-menu').classList.toggle('show');
+  }
+
+  function closeProfileMenu() {
+    document.getElementById('profile-menu').classList.remove('show');
+  }
+
+  function logout() {
+    localStorage.clear();
+    window.location.href = '/views/auth.html';
+  }
+
+  // Tutup modal kalau klik di luar
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', e => {
+      if (e.target === overlay) overlay.classList.remove('show');
+    });
+  });
+
+  // Tutup profile menu kalau klik di luar
+  document.addEventListener('click', e => {
+    const profileBtn = document.getElementById('btn-profile');
+    const menu = document.getElementById('profile-menu');
+    if (!menu || !profileBtn) return;
+    if (!profileBtn.contains(e.target) && !menu.contains(e.target)) {
+      menu.classList.remove('show');
+    }
+  });
+
+  // Load pertama kali
+  loadPosts();
+</script>
+</body>
+</html>

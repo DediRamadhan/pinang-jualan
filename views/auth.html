@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MarketPinang — Login</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .container {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 420px;
+      padding: 40px;
+    }
+
+    .logo {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .logo h1 {
+      font-size: 28px;
+      color: #2563eb;
+      font-weight: 700;
+    }
+
+    .logo p {
+      color: #64748b;
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
+    .tabs {
+      display: flex;
+      background: #f1f5f9;
+      border-radius: 10px;
+      padding: 4px;
+      margin-bottom: 28px;
+    }
+
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: #64748b;
+      transition: all 0.2s;
+    }
+
+    .tab.active {
+      background: white;
+      color: #2563eb;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+
+    .form { display: none; }
+    .form.active { display: block; }
+
+    .field {
+      margin-bottom: 16px;
+    }
+
+    .field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: #374151;
+      margin-bottom: 6px;
+    }
+
+    .field input {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    .password-input-wrapper {
+      position: relative;
+    }
+
+    .password-toggle {
+      position: absolute;
+      top: 50%;
+      right: 12px;
+      transform: translateY(-50%);
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      padding: 0;
+      color: #64748b;
+    }
+
+    .password-toggle:hover {
+      color: #2563eb;
+    }
+
+    .field input:focus {
+      border-color: #2563eb;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      margin-top: 8px;
+    }
+
+    .btn:hover { background: #1d4ed8; }
+    .btn:disabled { background: #93c5fd; cursor: not-allowed; }
+
+    .alert {
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .alert.error { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+    .alert.success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+
+    @media (max-width: 768px) {
+      .container {
+        max-width: 95%;
+        padding: 24px;
+      }
+
+      .logo h1 {
+        font-size: 26px;
+        margin-bottom: 4px;
+      }
+
+      .logo p {
+        font-size: 13px;
+      }
+
+      .tabs {
+        padding: 5px;
+        margin-bottom: 20px;
+      }
+
+      .tab {
+        padding: 12px;
+        font-size: 14px;
+      }
+
+      .field input {
+        padding: 12px 14px;
+        font-size: 16px;
+        min-height: 44px;
+        border-radius: 8px;
+      }
+
+      .btn {
+        padding: 13px;
+        font-size: 15px;
+        min-height: 44px;
+        border-radius: 8px;
+      }
+
+      .alert {
+        padding: 11px 13px;
+        font-size: 13px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        max-width: 100%;
+        padding: 16px;
+        border-radius: 0;
+      }
+
+      .logo h1 {
+        font-size: 22px;
+      }
+
+      .logo p {
+        font-size: 12px;
+      }
+
+      .tabs {
+        padding: 4px;
+      }
+
+      .tab {
+        padding: 10px;
+        font-size: 13px;
+      }
+
+      .field label {
+        font-size: 12px;
+      }
+
+      .field input {
+        padding: 11px 12px;
+        font-size: 16px;
+        min-height: 40px;
+      }
+
+      .btn {
+        padding: 12px;
+        font-size: 14px;
+        min-height: 40px;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="/css/responsive-fixes.css">
+</head>
+<body>
+  <div class="container">
+    <div class="logo">
+      <h1>🛍️ MarketPinang</h1>
+      <p>Marketplace jual beli terpercaya</p>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('login')">Masuk</div>
+      <div class="tab" onclick="switchTab('register')">Daftar</div>
+    </div>
+
+    <!-- Form Login -->
+    <div id="form-login" class="form active">
+      <div id="alert-login" class="alert"></div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="contoh@email.com">
+      </div>
+      <div class="field field-password">
+        <label>Password</label>
+        <div class="password-input-wrapper">
+          <input type="password" id="login-password" placeholder="Password kamu">
+          <button type="button" class="password-toggle" id="login-password-toggle" onclick="togglePassword('login-password','login-password-toggle')" aria-label="Tampilkan kata sandi">👁️</button>
+        </div>
+      </div>
+      <button class="btn" onclick="login()">Masuk</button>
+    </div>
+
+    <!-- Form Register -->
+    <div id="form-register" class="form">
+      <div id="alert-register" class="alert"></div>
+      <div class="field">
+        <label>Nama Lengkap</label>
+        <input type="text" id="reg-nama" placeholder="Nama kamu">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="reg-email" placeholder="contoh@email.com">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="reg-password" placeholder="Minimal 6 karakter">
+      </div>
+      <button class="btn" onclick="register()">Daftar Sekarang</button>
+    </div>
+  </div>
+
+  <script>
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach((t, i) => {
+        t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
+      });
+      document.getElementById('form-login').classList.toggle('active', tab === 'login');
+      document.getElementById('form-register').classList.toggle('active', tab === 'register');
+    }
+
+    function showAlert(id, pesan, tipe) {
+      const el = document.getElementById(id);
+      el.textContent = pesan;
+      el.className = `alert ${tipe}`;
+      el.style.display = 'block';
+    }
+
+    async function login() {
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+
+        if (!res.ok) return showAlert('alert-login', data.error, 'error');
+
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('nama', data.nama);
+        localStorage.setItem('role', data.role);
+        localStorage.setItem('userId', data.id);
+
+        showAlert('alert-login', 'Login berhasil! Mengalihkan...', 'success');
+
+        setTimeout(() => {
+          if (data.role === 'admin') {
+            window.location.href = '/views/admin.html';
+          } else {
+            window.location.href = '/views/home.html';
+          }
+        }, 800);
+
+      } catch {
+        showAlert('alert-login', 'Gagal terhubung ke server', 'error');
+      }
+    }
+
+    function togglePassword(inputId, toggleId) {
+      const input = document.getElementById(inputId);
+      const toggle = document.getElementById(toggleId);
+      if (!input || !toggle) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        toggle.textContent = '🙈';
+        toggle.setAttribute('aria-label', 'Sembunyikan kata sandi');
+      } else {
+        input.type = 'password';
+        toggle.textContent = '👁️';
+        toggle.setAttribute('aria-label', 'Tampilkan kata sandi');
+      }
+    }
+
+    async function register() {
+      const nama = document.getElementById('reg-nama').value;
+      const email = document.getElementById('reg-email').value;
+      const password = document.getElementById('reg-password').value;
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nama, email, password })
+        });
+        const data = await res.json();
+
+        if (!res.ok) return showAlert('alert-register', data.error, 'error');
+
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('nama', data.nama);
+        localStorage.setItem('role', data.role);
+        localStorage.setItem('userId', data.id);
+
+        showAlert('alert-register', 'Registrasi berhasil! Mengalihkan...', 'success');
+        setTimeout(() => window.location.href = '/views/home.html', 800);
+
+      } catch {
+        showAlert('alert-register', 'Gagal terhubung ke server', 'error');
+      }
+    }
+
+    // Kalau sudah login, langsung redirect
+    const token = localStorage.getItem('token');
+    const role = localStorage.getItem('role');
+    if (token) {
+      window.location.href = role === 'admin' ? '/views/admin.html' : '/views/home.html';
+    }
+  </script>
+</body>
+</html>

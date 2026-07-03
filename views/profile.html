@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MarketPinang — Profil</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+    }
+    .navbar {
+      background: white;
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.08);
+    }
+    .navbar h1 { font-size: 20px; color: #2563eb; }
+    .nav-actions button {
+      border: none;
+      padding: 8px 14px;
+      border-radius: 8px;
+      margin-left: 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .btn-home { background: #eff6ff; color: #2563eb; }
+    .btn-logout { background: #fef2f2; color: #dc2626; }
+    .container { max-width: 1100px; margin: 24px auto; padding: 0 16px 40px; }
+    .card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.06);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .profile-top {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .avatar {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 34px;
+      font-weight: 700;
+    }
+    .profile-info h2 { font-size: 24px; margin-bottom: 6px; }
+    .profile-info p { color: #64748b; margin-bottom: 6px; }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #eff6ff;
+      color: #2563eb;
+      font-size: 12px;
+      font-weight: 600;
+      margin-top: 6px;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-top: 16px;
+    }
+    .stat-box {
+      background: #f8fafc;
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .stat-box strong { display: block; font-size: 22px; margin-top: 4px; }
+    .grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 20px; }
+    .form-group { margin-bottom: 12px; }
+    .form-group label { display: block; font-size: 13px; margin-bottom: 6px; color: #374151; }
+    .form-group input, .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
+    .btn-submit { background: #2563eb; color: white; border: none; padding: 10px 14px; border-radius: 8px; cursor: pointer; margin-top: 6px; }
+    .posts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-top: 14px; }
+    .post-card { border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; background: #fff; }
+    .post-card img { width: 100%; height: 140px; object-fit: cover; background: #f1f5f9; }
+    .post-card .content { padding: 12px; }
+    .post-card h4 { font-size: 15px; margin-bottom: 4px; }
+    .post-card p { font-size: 13px; color: #64748b; margin-bottom: 6px; }
+    .empty { color: #94a3b8; text-align: center; padding: 24px 0; }
+    .alert { padding: 10px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 12px; display: none; }
+    .alert.error { background: #fef2f2; color: #dc2626; }
+    .alert.success { background: #f0fdf4; color: #16a34a; }
+    @media (max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+
+  @media (max-width: 768px) {
+      .navbar {
+        padding: 10px 14px;
+        flex-wrap: wrap;
+      }
+
+      .navbar-logo {
+        font-size: 18px;
+        width: 100%;
+        margin-bottom: 8px;
+      }
+
+      .navbar-menu {
+        width: 100%;
+        gap: 6px;
+      }
+
+      .navbar-menu a {
+        padding: 10px 12px;
+        font-size: 13px;
+        flex: 1;
+        min-height: 40px;
+        display: flex;
+        align-items: center;
+      }
+
+      .container {
+        margin: 16px auto;
+        padding: 0 12px;
+      }
+
+      .card {
+        padding: 18px;
+        border-radius: 12px;
+      }
+
+      .card h2 {
+        font-size: 17px;
+      }
+
+      .avatar {
+        width: 80px;
+        height: 80px;
+        font-size: 32px;
+      }
+
+      .btn-upload-foto {
+        padding: 9px 14px;
+        font-size: 13px;
+        min-height: 40px;
+      }
+
+      .field input {
+        padding: 12px 14px;
+        font-size: 16px;
+        min-height: 44px;
+      }
+
+      .field-readonly {
+        padding: 12px 14px;
+        font-size: 14px;
+      }
+
+      .stats {
+        padding: 14px;
+        gap: 10px;
+      }
+
+      .button-group {
+        gap: 8px;
+        margin-top: 16px;
+      }
+
+      .btn-save,
+      .btn-batal {
+        padding: 12px;
+        font-size: 14px;
+        min-height: 44px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .navbar {
+        padding: 8px 10px;
+      }
+
+      .navbar-logo {
+        font-size: 16px;
+      }
+
+      .navbar-menu a {
+        padding: 8px 10px;
+        font-size: 12px;
+        min-height: 36px;
+      }
+
+      .container {
+        margin: 10px auto;
+      }
+
+      .card {
+        padding: 14px;
+      }
+
+      .card h2 {
+        font-size: 15px;
+      }
+
+      .avatar {
+        width: 70px;
+        height: 70px;
+        font-size: 28px;
+      }
+
+      .btn-upload-foto {
+        padding: 8px 12px;
+        font-size: 12px;
+        min-height: 36px;
+      }
+
+      .field input {
+        padding: 11px 12px;
+        font-size: 16px;
+        min-height: 40px;
+      }
+
+      .stats {
+        padding: 10px;
+      }
+
+      .stat-value {
+        font-size: 20px;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+
+      .btn-save,
+      .btn-batal {
+        width: 100%;
+        padding: 11px;
+        min-height: 40px;
+        font-size: 13px;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="/css/responsive-fixes.css">
+</head>
+<body>
+<script src="/js/auth.js"></script>
+<script>cekLogin();</script> 
+  
+  <nav class="navbar">
+    <h1>🛍️ MarketPinang</h1>
+    <div class="nav-actions">
+      <button class="btn-home" onclick="window.location.href='/views/home.html'">🏠 Beranda</button>
+      <button class="btn-logout" onclick="logout()">Keluar</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <section class="card">
+      <div class="profile-top">
+        <div id="avatarBox" class="avatar">U</div>
+        <div class="profile-info">
+          <h2 id="userName">Memuat profil...</h2>
+          <p id="userEmail">-</p>
+          <p id="userJoin">-</p>
+          <span class="badge" id="userRole">-</span>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat-box"><span>Total Postingan</span><strong id="totalPosts">0</strong></div>
+        <div class="stat-box"><span>Disetujui</span><strong id="approvedPosts">0</strong></div>
+        <div class="stat-box"><span>Terjual</span><strong id="soldPosts">0</strong></div>
+        <div class="stat-box"><span>Wishlist</span><strong id="wishlistCount">0</strong></div>
+        <div class="stat-box"><span>Review</span><strong id="reviewCount">0</strong></div>
+      </div>
+    </section>
+
+    <div class="grid">
+      <section class="card">
+        <h3 style="margin-bottom: 12px;">📦 Postingan Saya</h3>
+        <div id="postsList" class="posts-grid"></div>
+      </section>
+
+      <section class="card">
+        <h3 style="margin-bottom: 12px;">✏️ Edit Profil</h3>
+        <div id="alertProfile" class="alert"></div>
+        <form id="profileForm" enctype="multipart/form-data">
+          <div class="form-group">
+            <label>Nama</label>
+            <input type="text" id="nama" name="nama" placeholder="Nama baru" />
+          </div>
+          <div class="form-group">
+            <label>Foto Profil</label>
+            <input type="file" id="foto_profil" name="foto_profil" accept="image/*" />
+          </div>
+          <div class="form-group">
+            <label>Password Lama</label>
+            <input type="password" id="currentPassword" name="currentPassword" placeholder="Opsional" />
+          </div>
+          <div class="form-group">
+            <label>Password Baru</label>
+            <input type="password" id="newPassword" name="newPassword" placeholder="Minimal 6 karakter" />
+          </div>
+          <button type="submit" class="btn-submit">Simpan Perubahan</button>
+        </form>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token');
+    const currentUserId = parseInt(localStorage.getItem('userId'), 10);
+    if (!token) {
+      window.location.href = '/views/auth.html';
+    }
+
+    function getQueryParam(name) {
+      return new URLSearchParams(window.location.search).get(name);
+    }
+
+    async function loadProfile() {
+      try {
+        const requestedId = getQueryParam('id');
+        const isOwnProfile = !requestedId || parseInt(requestedId, 10) === currentUserId;
+        const endpoint = requestedId ? `/api/profile/${requestedId}` : '/api/profile';
+        console.log('Loading profile endpoint:', endpoint, 'currentUserId:', currentUserId);
+        const res = await fetch(endpoint, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        let data;
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          data = await res.json();
+        } else {
+          const text = await res.text();
+          throw new Error(`Unexpected response: ${text}`);
+        }
+
+        if (!res.ok) throw new Error(data.error || 'Gagal memuat profil');
+
+        if (!isOwnProfile) {
+          const editSection = document.getElementById('profileForm');
+          const alertProfile = document.getElementById('alertProfile');
+          const postSectionHeading = document.querySelector('.grid section.card h3');
+          if (editSection) editSection.style.display = 'none';
+          if (alertProfile) alertProfile.style.display = 'none';
+          if (postSectionHeading) postSectionHeading.textContent = '📦 Postingan Penjual';
+        }
+
+        document.getElementById('userName').textContent = data.user?.nama || 'Tanpa nama';
+        document.getElementById('userEmail').textContent = data.user?.email || '-';
+        document.getElementById('userRole').textContent = data.user?.role || 'user';
+        document.getElementById('userJoin').textContent = `Bergabung ${new Date(data.user?.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+        document.getElementById('totalPosts').textContent = data.stats?.total_posts || 0;
+        document.getElementById('approvedPosts').textContent = data.stats?.approved || 0;
+        document.getElementById('soldPosts').textContent = data.stats?.sold || 0;
+        document.getElementById('wishlistCount').textContent = data.stats?.wishlist || 0;
+        document.getElementById('reviewCount').textContent = data.stats?.reviews || 0;
+
+        const avatarBox = document.getElementById('avatarBox');
+        if (data.user?.foto_profil) {
+          avatarBox.innerHTML = `<img src="${data.user.foto_profil}" alt="avatar" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">`;
+        } else {
+          avatarBox.textContent = (data.user?.nama || 'U').charAt(0).toUpperCase();
+        }
+
+        const posts = data.posts || [];
+        const postsList = document.getElementById('postsList');
+        if (!posts.length) {
+          postsList.innerHTML = '<div class="empty">Belum ada postingan yang tampil.</div>';
+          return;
+        }
+
+        postsList.innerHTML = posts.map(post => `
+          <div class="post-card">
+            ${post.foto ? `<img src="${post.foto}" alt="${post.judul}">` : '<div style="height:140px;background:#f1f5f9;display:flex;align-items:center;justify-content:center;">📦</div>'}
+            <div class="content">
+              <h4>${post.judul}</h4>
+              <p>${post.kategori}</p>
+              <p><strong>Rp ${Number(post.harga).toLocaleString('id-ID')}</strong></p>
+              <p style="font-size:12px;">${post.status}</p>
+              ${isOwnProfile ? `<button onclick="markAsSold(${post.id})" style="margin-top:8px;padding:6px 10px;border:none;border-radius:8px;background:#f0fdf4;color:#16a34a;cursor:pointer">Tandai Terjual</button>` : ''}
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        document.getElementById('postsList').innerHTML = `<div class="empty">${err.message}</div>`;
+      }
+    }
+
+    async function markAsSold(postId) {
+      try {
+        const res = await fetch(`/api/posts/${postId}/sold`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Gagal memperbarui status');
+        alert(data.message || 'Status berhasil diubah');
+        loadProfile();
+      } catch (err) {
+        alert(err.message);
+      }
+    }
+
+    document.getElementById('profileForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      const alertBox = document.getElementById('alertProfile');
+
+      try {
+        const res = await fetch('/api/profile/edit', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData
+        });
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || 'Gagal menyimpan profil');
+
+        alertBox.className = 'alert success';
+        alertBox.textContent = data.message || 'Profil berhasil diperbarui';
+        alertBox.style.display = 'block';
+        form.reset();
+        loadProfile();
+      } catch (err) {
+        alertBox.className = 'alert error';
+        alertBox.textContent = err.message;
+        alertBox.style.display = 'block';
+      }
+    });
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = '/views/auth.html';
+    }
+
+    loadProfile();
+  </script>
+</body>
+</html>

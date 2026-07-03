@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MarketPinang — Admin</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+    }
+
+    /* SIDEBAR */
+    .sidebar {
+      position: fixed;
+      left: 0; top: 0; bottom: 0;
+      width: 220px;
+      background: #1e293b;
+      padding: 24px 0;
+      z-index: 100;
+    }
+
+    .sidebar-logo {
+      padding: 0 20px 24px;
+      font-size: 18px;
+      font-weight: 700;
+      color: white;
+      border-bottom: 1px solid #334155;
+    }
+
+    .sidebar-logo span { color: #60a5fa; }
+
+    .sidebar-menu { padding: 16px 0; }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 20px;
+      color: #94a3b8;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 14px;
+    }
+
+    .menu-item:hover { background: #334155; color: white; }
+    .menu-item.active { background: #2563eb; color: white; }
+    .menu-item .icon { font-size: 18px; }
+
+    .sidebar-bottom {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      padding: 16px 20px;
+      border-top: 1px solid #334155;
+    }
+
+    .btn-logout {
+      width: 100%;
+      padding: 10px;
+      background: #dc2626;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    /* MAIN */
+    .main {
+      margin-left: 220px;
+      padding: 24px;
+    }
+
+    .page-title {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1e293b;
+      margin-bottom: 20px;
+    }
+
+    /* STAT CARDS */
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: #64748b;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+
+    .stat-card.blue .stat-value { color: #2563eb; }
+    .stat-card.yellow .stat-value { color: #d97706; }
+    .stat-card.green .stat-value { color: #16a34a; }
+    .stat-card.red .stat-value { color: #dc2626; }
+
+    /* FILTER TAB */
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .filter-tab {
+      padding: 7px 16px;
+      border-radius: 20px;
+      border: 1.5px solid #e2e8f0;
+      background: white;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: #374151;
+      transition: all 0.2s;
+    }
+
+    .filter-tab.active {
+      background: #2563eb;
+      color: white;
+      border-color: #2563eb;
+    }
+
+    /* TABLE */
+    .table-wrap {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+      overflow: hidden;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead {
+      background: #f8fafc;
+    }
+
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    td {
+      padding: 14px 16px;
+      font-size: 14px;
+      color: #374151;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: middle;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
+
+    .badge {
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .badge-pending { background: #fffbeb; color: #d97706; }
+    .badge-approved { background: #f0fdf4; color: #16a34a; }
+    .badge-rejected { background: #fef2f2; color: #dc2626; }
+
+    .action-btn {
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      margin-right: 4px;
+    }
+
+    .btn-approve { background: #f0fdf4; color: #16a34a; }
+    .btn-approve:hover { background: #dcfce7; }
+    .btn-reject { background: #fffbeb; color: #d97706; }
+    .btn-reject:hover { background: #fef9c3; }
+    .btn-hapus { background: #fef2f2; color: #dc2626; }
+    .btn-hapus:hover { background: #fee2e2; }
+
+    .empty { text-align: center; padding: 40px; color: #94a3b8; }
+
+    /* SECTION */
+    .section { display: none; }
+    .section.active { display: block; }
+
+    /* MODAL REJECT */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.show { display: flex; }
+
+    .modal {
+      background: white;
+      border-radius: 16px;
+      padding: 28px;
+      width: 100%;
+      max-width: 420px;
+      margin: 16px;
+    }
+
+    .modal h3 { margin-bottom: 14px; color: #1e293b; }
+
+    .modal textarea {
+      width: 100%;
+      padding: 10px 13px;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      resize: vertical;
+      min-height: 80px;
+      outline: none;
+      margin-bottom: 14px;
+    }
+
+    .modal textarea:focus { border-color: #2563eb; }
+
+    .modal-btns { display: flex; gap: 10px; }
+
+    .modal-btns button {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .btn-konfirm-reject { background: #dc2626; color: white; }
+    .btn-batal { background: #f1f5f9; color: #374151; }
+
+    /* POST FOTO KECIL */
+    .post-thumb {
+      width: 48px;
+      height: 48px;
+      border-radius: 6px;
+      object-fit: cover;
+      background: #f1f5f9;
+    }
+
+    .post-thumb-placeholder {
+      width: 48px;
+      height: 48px;
+      border-radius: 6px;
+      background: #f1f5f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    /* CHAT SECTION */
+    .chat-section {
+      display: grid;
+      grid-template-columns: 200px 1fr;
+      gap: 16px;
+      height: 600px;
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+    }
+
+    .chat-list-admin {
+      border-right: 1px solid #e2e8f0;
+      overflow-y: auto;
+    }
+
+    .chat-item-admin {
+      padding: 10px;
+      border-bottom: 1px solid #f1f5f9;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: background 0.15s;
+      font-size: 13px;
+    }
+
+    .chat-item-admin:hover { background: #f8fafc; }
+    .chat-item-admin.active { background: #eff6ff; }
+
+    .chat-detail {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-detail-header {
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e2e8f0;
+      margin-bottom: 12px;
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    .chat-detail-messages {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .msg-bubble-admin {
+      max-width: 70%;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .msg-lawan { background: #f1f5f9; color: #1e293b; }
+    .msg-saya { background: #2563eb; color: white; align-self: flex-end; }
+
+    .chat-detail-input {
+      display: flex;
+      gap: 8px;
+    }
+
+    .chat-detail-input textarea {
+      flex: 1;
+      padding: 8px 10px;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      font-size: 12px;
+      outline: none;
+      resize: none;
+      max-height: 80px;
+    }
+
+    .chat-detail-input button {
+      padding: 8px 12px;
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .chat-detail-input button:hover { background: #1d4ed8; }
+
+    /* RESPONSIVE MOBILE */
+    @media (max-width: 768px) {
+      .sidebar {
+        position: fixed;
+        left: -220px;
+        width: 220px;
+        height: 100vh;
+        z-index: 1300;
+        transition: left 0.3s;
+      }
+
+      .sidebar.show {
+        left: 0 !important;
+      }
+
+      .main {
+        margin-left: 0;
+        padding: 12px;
+      }
+      .top-bar {
+        position: sticky;
+        top: 12px;
+        z-index: 1100;
+        background: white;
+        border-radius: 18px;
+        padding: 12px 16px;
+        box-shadow: 0 8px 20px rgba(15,23,42,0.08);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+      .top-bar-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .page-title {
+        height: 23px;
+        font-size: 16px;
+        line-height: 1.2;
+        font-weight: 700;
+      }
+      .header-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: #eef2ff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+      }
+      .header-menu-btn {
+        min-width: 44px;
+        min-height: 44px;
+        background: #2563eb;
+        border: none;
+        border-radius: 14px;
+        color: white;
+        font-size: 18px;
+        cursor: pointer;
+        position: relative;
+        z-index: 3001;
+        touch-action: manipulation;
+        pointer-events: auto;
+      }
+      .top-bar {
+        pointer-events: auto;
+      }
+      .top-bar-left {
+        position: relative;
+        z-index: 3000;
+      }
+      .mobile-sidebar-toggle {
+        display: block;
+        position: fixed;
+        top: 15px;
+        right: 15px;
+        z-index: 3002;
+        padding: 8px;
+        border-radius: 18px;
+      }
+      .page-title {
+        position: static;
+        top: auto;
+        background: transparent;
+        padding: 0;
+        border-radius: 0;
+        box-shadow: none;
+        display: inline-block;
+        margin-bottom: 0;
+      }
+      #hamburger-btn {
+        display: block;
+        position: relative;
+        z-index: 3001;
+        pointer-events: auto;
+        margin: 0;
+      }
+      /* when sidebar is open, keep hamburger hidden (handled in toggleSidebar()) */
+      #close-sidebar { display: block; }
+    }
+
+    /* Make CRUD tables scroll horizontally on small screens */
+    .table-wrap { overflow-x: auto; }
+    .table-wrap table { min-width: 680px; }
+
+    /* Sticky page title so it follows when scrolling */
+    .page-title {
+      position: sticky;
+      top: 20px;
+      z-index: 1100;
+      padding: 8px 12px;
+      border-radius: 10px;
+      display: inline-block;
+      margin-bottom: 12px;
+    }
+  </style>
+  <link rel="stylesheet" href="/css/responsive-fixes.css">
+</head>
+<body>
+<script src="/js/auth.js"></script>
+<script>cekAdmin();</script>  
+
+
+<!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar-menu">
+  <button id="close-sidebar" onclick="toggleSidebar()" style="position:absolute;top:10px;right:10px;background:none;border:none;color:#64748b;font-size:20px;cursor:pointer">✕</button>
+  <div class="sidebar-logo">🛍️ Market<span>Kita</span> <br><small style="font-size:11px;color:#64748b;font-weight:400">Panel Admin</small></div>
+  <div class="sidebar-menu">
+    <div class="menu-item active" onclick="gotoSection('dashboard')">
+      <span class="icon">📊</span> Dashboard
+    </div>
+    <div class="menu-item" onclick="gotoSection('postingan')">
+      <span class="icon">📦</span> Postingan
+    </div>
+    <div class="menu-item" onclick="gotoSection('users')">
+      <span class="icon">👥</span> Users
+    </div>
+    <div class="menu-item" onclick="gotoSection('chat')">
+      <span class="icon">💬</span> Chat
+    </div>
+  </div>
+  <div class="sidebar-bottom">
+    <div style="font-size:12px;color:#64748b;margin-bottom:10px">Login sebagai:<br><strong style="color:white" id="admin-nama"></strong></div>
+    <button class="btn-logout" onclick="logout()">Keluar</button>
+  </div>
+
+</div>
+
+<!-- overlay shown when sidebar open on mobile -->
+<div id="sidebar-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.3);z-index:1200"></div>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="mobile-sidebar-toggle">
+    <button id="hamburger-btn" class="header-menu-btn" type="button" aria-label="Open sidebar">☰</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="section-dashboard" class="section active">
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <div class="header-icon">📊</div>
+        <div class="page-title">Dashboard</div>
+      </div>
+    </div>
+    <div class="stat-grid">
+      <div class="stat-card blue">
+        <div class="stat-label">Total User</div>
+        <div class="stat-value" id="stat-user">-</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Postingan</div>
+        <div class="stat-value" id="stat-post">-</div>
+      </div>
+      <div class="stat-card yellow">
+        <div class="stat-label">Menunggu Review</div>
+        <div class="stat-value" id="stat-pending">-</div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-label">Disetujui</div>
+        <div class="stat-value" id="stat-approved">-</div>
+      </div>
+      <div class="stat-card red">
+        <div class="stat-label">Ditolak</div>
+        <div class="stat-value" id="stat-rejected">-</div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Postingan</th>
+            <th>Penjual</th>
+            <th>Harga</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tabel-pending"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- POSTINGAN -->
+  <div id="section-postingan" class="section">
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <div class="header-icon">📦</div>
+        <div class="page-title">Manajemen Postingan</div>
+      </div>
+    </div>
+    <div class="filter-tabs">
+      <button class="filter-tab active" onclick="filterPost('semua', this)">Semua</button>
+      <button class="filter-tab" onclick="filterPost('pending', this)">⏳ Pending</button>
+      <button class="filter-tab" onclick="filterPost('approved', this)">✅ Disetujui</button>
+      <button class="filter-tab" onclick="filterPost('rejected', this)">❌ Ditolak</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Foto</th>
+            <th>Judul</th>
+            <th>Penjual</th>
+            <th>Harga</th>
+            <th>Kategori</th>
+            <th>Status</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tabel-posts"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- USERS -->
+  <div id="section-users" class="section">
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <div class="header-icon">👥</div>
+        <div class="page-title">Manajemen Users</div>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Nama</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Bergabung</th>
+            <th>Aksi</th>
+          </tr>
+        </thead>
+        <tbody id="tabel-users"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CHAT (untuk admin) -->
+  <div id="section-chat" class="section">
+    <div class="top-bar">
+      <div class="top-bar-left">
+        <div class="header-icon">💬</div>
+        <div class="page-title">Chat dengan User</div>
+      </div>
+    </div>
+    <div class="chat-section">
+      <div class="chat-list-admin" id="chat-list-admin"></div>
+      <div class="chat-detail" id="chat-detail">
+        <div style="text-align:center;color:#94a3b8;font-size:13px;padding:20px">Pilih chat untuk membaca percakapan</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL REJECT -->
+<div class="modal-overlay" id="modal-reject">
+  <div class="modal">
+    <h3>❌ Tolak Postingan</h3>
+    <textarea id="alasan-reject" placeholder="Tulis alasan penolakan..."></textarea>
+    <div class="modal-btns">
+      <button class="btn-batal" onclick="tutupModal()">Batal</button>
+      <button class="btn-konfirm-reject" onclick="konfirmReject()">Tolak Postingan</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const token = localStorage.getItem('token');
+  const role = localStorage.getItem('role');
+  const adminId = parseInt(localStorage.getItem('userId'));
+
+  // Cek akses admin
+  if (!token || role !== 'admin') {
+    window.location.href = '/views/auth.html';
+  }
+
+  document.getElementById('admin-nama').textContent = localStorage.getItem('nama');
+
+  let rejectIdAktif = null;
+
+  // Navigasi section
+  function gotoSection(nama) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'));
+    document.getElementById(`section-${nama}`).classList.add('active');
+    event.currentTarget.classList.add('active');
+
+    if (nama === 'dashboard') loadDashboard();
+    if (nama === 'postingan') loadPosts('semua');
+    if (nama === 'users') loadUsers();
+    if (nama === 'chat') loadChatAdmin();
+  }
+
+
+  // Load dashboard
+  async function loadDashboard() {
+    const res = await fetch('/api/admin/statistik', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+
+    document.getElementById('stat-user').textContent = data.totalUser;
+    document.getElementById('stat-post').textContent = data.totalPost;
+    document.getElementById('stat-pending').textContent = data.pending;
+    document.getElementById('stat-approved').textContent = data.approved;
+    document.getElementById('stat-rejected').textContent = data.rejected;
+
+    // Load postingan pending di dashboard
+    const res2 = await fetch('/api/admin/posts?status=pending', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const posts = await res2.json();
+    const tbody = document.getElementById('tabel-pending');
+
+    if (posts.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" class="empty">✅ Tidak ada postingan yang perlu direview</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = posts.map(post => `
+      <tr>
+        <td>
+          <div style="font-weight:600">${post.judul}</div>
+          <div style="font-size:12px;color:#64748b;margin-top:2px">${post.deskripsi.substring(0,60)}...</div>
+        </td>
+        <td>
+          <div>${post.nama_penjual}</div>
+          <div style="font-size:12px;color:#64748b">${post.email_penjual}</div>
+        </td>
+        <td>Rp ${Number(post.harga).toLocaleString('id-ID')}</td>
+        <td><span class="badge badge-pending">⏳ Pending</span></td>
+        <td>
+          <button class="action-btn btn-approve" onclick="approvePost(${post.id})">✅ Setujui</button>
+          <button class="action-btn btn-reject" onclick="bukaReject(${post.id})">❌ Tolak</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // Load semua postingan
+  async function loadPosts(status) {
+    const res = await fetch(`/api/admin/posts?status=${status}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const posts = await res.json();
+    const tbody = document.getElementById('tabel-posts');
+
+    if (posts.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="7" class="empty">Tidak ada postingan</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = posts.map(post => `
+      <tr>
+        <td>
+          ${post.foto
+            ? `<img class="post-thumb" src="${post.foto}">`
+            : `<div class="post-thumb-placeholder">📦</div>`}
+        </td>
+        <td>
+          <div style="font-weight:500">${post.judul}</div>
+          <div style="font-size:12px;color:#64748b">${post.kategori}</div>
+        </td>
+        <td>${post.nama_penjual}</td>
+        <td>Rp ${Number(post.harga).toLocaleString('id-ID')}</td>
+        <td>${post.kategori}</td>
+        <td>
+          <span class="badge badge-${post.status}">
+            ${post.status === 'approved' ? '✅ Aktif' : post.status === 'pending' ? '⏳ Pending' : '❌ Ditolak'}
+          </span>
+        </td>
+        <td>
+          ${post.status === 'pending' ? `
+            <button class="action-btn btn-approve" onclick="approvePost(${post.id})">✅</button>
+            <button class="action-btn btn-reject" onclick="bukaReject(${post.id})">❌</button>
+          ` : ''}
+          <button class="action-btn btn-hapus" onclick="hapusPost(${post.id})">🗑️</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // Filter postingan
+  function filterPost(status, el) {
+    document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+    el.classList.add('active');
+    loadPosts(status);
+  }
+
+  // Load users
+  async function loadUsers() {
+    const res = await fetch('/api/admin/users', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const users = await res.json();
+    const tbody = document.getElementById('tabel-users');
+
+    tbody.innerHTML = users.map(user => `
+      <tr>
+        <td><strong>${user.nama}</strong>${user.banned ? ' <span style="font-size:12px;color:#dc2626">(Banned)</span>' : ''}</td>
+        <td>${user.email}</td>
+        <td>
+          <span class="badge ${user.role === 'admin' ? 'badge-approved' : 'badge-pending'}">
+            ${user.role === 'admin' ? '👑 Admin' : '👤 User'}
+          </span>
+        </td>
+        <td style="font-size:13px;color:#64748b">
+          ${new Date(user.created_at).toLocaleDateString('id-ID', {day:'numeric',month:'long',year:'numeric'})}
+        </td>
+        <td>
+          <button class="action-btn btn-chat" onclick="event.stopPropagation();openAdminChat(${user.id}, '${user.nama}')">💬</button>
+          ${user.role !== 'admin' ? `
+            <button class="action-btn btn-reject" onclick="event.stopPropagation();toggleBanUser(${user.id})">${user.banned ? '✅' : '🚫'}</button>
+            <button class="action-btn btn-hapus" onclick="event.stopPropagation();deleteUser(${user.id})">🗑️</button>
+          ` : ''}
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  let chatAdminAktif = null;
+
+  async function loadChatAdmin() {
+    // Ambil chat threads yang admin di-invite
+    const res = await fetch('/api/chat/admin/threads', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const threads = await res.json();
+    
+    const container = document.getElementById('chat-list-admin');
+    if (threads.length === 0) {
+      container.innerHTML = '<div style="padding:20px;text-align:center;color:#94a3b8;font-size:12px">Belum ada undangan chat</div>';
+      return;
+    }
+
+    container.innerHTML = threads.map(t => `
+      <div class="chat-item-admin" onclick="bukaDetailChatAdmin(${t.id}, '${t.user1_nama}', '${t.user2_nama}', ${t.user1_id}, ${t.user2_id})">
+        <strong style="display:block;font-size:12px">${t.user1_nama} ↔ ${t.user2_nama}</strong>
+        <div style="font-size:11px;color:#64748b;margin-top:2px">${t.pesan_terakhir?.substring(0,30) || 'Belum ada pesan'}...</div>
+        <div style="font-size:10px;color:#94a3b8;margin-top:3px">Status: ${t.status === 'active' ? '🟢 Aktif' : '🔴 Ditutup'}</div>
+      </div>
+    `).join('');
+  }
+
+  async function bukaDetailChatAdmin(threadId, nama1, nama2, user1Id, user2Id) {
+    chatAdminAktif = threadId;
+    
+    // Update active
+    document.querySelectorAll('.chat-item-admin').forEach(el => el.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+
+    // Ambil info thread
+    const infoRes = await fetch(`/api/chat/${threadId}/info`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const info = await infoRes.json();
+
+    // Ambil pesan dari user1 ke user2
+    const msgRes = await fetch(`/api/messages/${user2Id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(r => r.json()).catch(() => []);
+    
+    const detail = document.getElementById('chat-detail');
+    let messagesHtml = '';
+    
+    if (msgRes.length === 0) {
+      messagesHtml = '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:20px">Belum ada pesan</div>';
+    } else {
+      messagesHtml = msgRes.map(p => {
+        const dariku = p.sender_id === adminId;
+        const waktu = new Date(p.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        return `
+          <div style="display:flex;${dariku ? 'justify-content:flex-end' : ''}">
+            <div class="msg-bubble-admin ${dariku ? 'msg-saya' : 'msg-lawan'}">
+              ${escapeHtml(p.isi)}
+              <div style="font-size:10px;opacity:0.7;margin-top:2px">${waktu}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    detail.innerHTML = `
+      <div class="chat-detail-header">💬 ${nama1} ↔ ${nama2}</div>
+      <div class="chat-detail-messages" id="admin-messages">${messagesHtml}</div>
+      ${info.chat.status === 'active' ? `
+        <div class="chat-detail-input">
+          <textarea id="input-chat-admin" placeholder="Ketik pesan..." rows="1"></textarea>
+          <button onclick="kirimChatAdminThread(${user1Id}, ${user2Id})">Kirim</button>
+        </div>
+      ` : `
+        <div style="text-align:center;padding:10px;background:#f0fdf4;border-radius:6px;color:#16a34a;font-size:12px">
+          Chat telah ditutup (Status: ${info.chat.status === 'completed' ? 'Selesai' : 'Tidak Tertarik'})
+        </div>
+      `}
+    `;
+
+    scrollBawahAdmin();
+  }
+
+  async function kirimChatAdminThread(user1Id, user2Id) {
+    const input = document.getElementById('input-chat-admin');
+    if (!input) return;
+    
+    const isi = input.value.trim();
+    if (!isi) return;
+
+    await fetch('/api/messages', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ receiver_id: user1Id, isi })
+    });
+
+    await fetch('/api/messages', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ receiver_id: user2Id, isi })
+    });
+
+    input.value = '';
+    loadChatAdmin();
+    if (chatAdminAktif) {
+      bukaDetailChatAdmin(chatAdminAktif, '', '', user1Id, user2Id);
+    }
+  }
+
+  async function openAdminChat(userId, nama) {
+    gotoSection('chat');
+    chatAdminAktif = null;
+
+    const detail = document.getElementById('chat-detail');
+    detail.innerHTML = '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:20px">Memuat chat dengan ' + nama + '...</div>';
+
+    const msgRes = await fetch(`/api/messages/${userId}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    }).then(r => r.json()).catch(() => []);
+
+    let messagesHtml = '';
+    if (msgRes.length === 0) {
+      messagesHtml = '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:20px">Belum ada pesan dengan ' + nama + '</div>';
+    } else {
+      messagesHtml = msgRes.map(p => {
+        const dariku = p.sender_id === adminId;
+        const waktu = new Date(p.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        return `
+          <div style="display:flex;${dariku ? 'justify-content:flex-end' : ''}">
+            <div class="msg-bubble-admin ${dariku ? 'msg-saya' : 'msg-lawan'}">
+              ${escapeHtml(p.isi)}
+              <div style="font-size:10px;opacity:0.7;margin-top:2px">${waktu}</div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    detail.innerHTML = `
+      <div class="chat-detail-header">💬 Admin ↔ ${escapeHtml(nama)}</div>
+      <div class="chat-detail-messages" id="admin-messages">${messagesHtml}</div>
+      <div class="chat-detail-input">
+        <textarea id="input-chat-admin" placeholder="Ketik pesan..." rows="1"></textarea>
+        <button onclick="kirimChatToUser(${userId})">Kirim</button>
+      </div>
+    `;
+
+    scrollBawahAdmin();
+  }
+
+  async function kirimChatToUser(userId) {
+    const input = document.getElementById('input-chat-admin');
+    if (!input) return;
+
+    const isi = input.value.trim();
+    if (!isi) return;
+
+    await fetch('/api/messages', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ receiver_id: userId, isi })
+    });
+
+    input.value = '';
+    openAdminChat(userId, document.querySelector('.chat-detail-header')?.textContent?.replace('💬 Admin ↔ ', '') || 'User');
+  }
+
+  async function toggleBanUser(userId) {
+    const res = await fetch(`/api/admin/users/${userId}/ban`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (res.ok) loadUsers();
+  }
+
+  async function deleteUser(userId) {
+    if (!confirm('Yakin ingin menghapus akun user ini?')) return;
+    const res = await fetch(`/api/admin/users/${userId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (res.ok) loadUsers();
+  }
+
+  function scrollBawahAdmin() {
+    const msgContainer = document.getElementById('admin-messages');
+    if (msgContainer) setTimeout(() => {
+      msgContainer.scrollTop = msgContainer.scrollHeight;
+    }, 100);
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // Approve post
+  async function approvePost(id) {
+    const res = await fetch(`/api/admin/posts/${id}/approve`, {
+      method: 'PUT',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (res.ok) {
+      loadDashboard();
+      alert('✅ Postingan disetujui!');
+    }
+  }
+
+  // Buka modal reject
+  function bukaReject(id) {
+    rejectIdAktif = id;
+    document.getElementById('alasan-reject').value = '';
+    document.getElementById('modal-reject').classList.add('show');
+  }
+
+  function tutupModal() {
+    document.getElementById('modal-reject').classList.remove('show');
+    rejectIdAktif = null;
+  }
+
+  // Konfirmasi reject
+  async function konfirmReject() {
+    const alasan = document.getElementById('alasan-reject').value;
+    if (!alasan.trim()) {
+      alert('Tulis alasan penolakan dulu!');
+      return;
+    }
+
+    const res = await fetch(`/api/admin/posts/${rejectIdAktif}/reject`, {
+      method: 'PUT',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ alasan })
+    });
+
+    if (res.ok) {
+      tutupModal();
+      loadDashboard();
+      alert('Postingan ditolak.');
+    }
+  }
+
+  // Hapus post
+  async function hapusPost(id) {
+    if (!confirm('Yakin hapus postingan ini permanen?')) return;
+    const res = await fetch(`/api/admin/posts/${id}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (res.ok) loadPosts('semua');
+  }
+
+  function logout() {
+    localStorage.clear();
+    window.location.href = '/views/auth.html';
+  }
+
+  // Load pertama kali
+  loadDashboard();
+
+  // Toggle sidebar mobile
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar-menu');
+    const overlay = document.getElementById('sidebar-overlay');
+    const isOpen = sidebar.classList.contains('show');
+
+    if (isOpen) {
+      sidebar.classList.remove('show');
+      if (overlay) overlay.style.display = 'none';
+    } else {
+      sidebar.classList.add('show');
+      if (overlay) overlay.style.display = 'block';
+    }
+  }
+
+  // Hamburger button click
+  document.getElementById('hamburger-btn')?.addEventListener('click', toggleSidebar);
+
+  // close when overlay clicked
+  document.getElementById('sidebar-overlay')?.addEventListener('click', () => {
+    const sidebar = document.getElementById('sidebar-menu');
+    const overlay = document.getElementById('sidebar-overlay');
+    sidebar.classList.remove('show');
+    if (overlay) overlay.style.display = 'none';
+  });
+
+  // Close sidebar saat klik menu item
+  document.querySelectorAll('.menu-item').forEach(item => {
+    item.addEventListener('click', () => {
+      if (window.innerWidth <= 768) {
+        document.getElementById('sidebar-menu').classList.remove('show');
+        // restore hamburger visibility after closing
+        const hamburger = document.getElementById('hamburger-btn');
+        if (hamburger) hamburger.style.display = 'block';
+      }
+    });
+  });
+
+  // Show/hide hamburger based on screen size
+  function checkMobileAdmin() {
+    const hamburger = document.getElementById('hamburger-btn');
+    const closeSidebar = document.getElementById('close-sidebar');
+    const sidebar = document.getElementById('sidebar-menu');
+    
+    if (window.innerWidth <= 768) {
+      hamburger.style.display = 'block';
+      closeSidebar.style.display = 'block';
+      sidebar.classList.remove('show');
+    } else {
+      hamburger.style.display = 'none';
+      closeSidebar.style.display = 'none';
+      sidebar.classList.add('show');
+    }
+  }
+
+  window.addEventListener('resize', checkMobileAdmin);
+  checkMobileAdmin();
+</script>
+</body>
+</html>
