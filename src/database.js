@@ -120,6 +120,11 @@ if (!userColumns.includes('banned')) {
   db.prepare('ALTER TABLE users ADD COLUMN banned INTEGER DEFAULT 0').run();
 }
 
+const postColumns = db.prepare("PRAGMA table_info(posts)").all().map(c => c.name);
+if (!postColumns.includes('pinned')) {
+  db.prepare('ALTER TABLE posts ADD COLUMN pinned INTEGER DEFAULT 0').run();
+}
+
 // Buat akun admin default kalau belum ada
 const bcrypt = require('bcryptjs');
 const adminAda = db.prepare('SELECT id FROM users WHERE role = ?').get('admin');

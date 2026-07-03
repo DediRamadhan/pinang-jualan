@@ -11,7 +11,7 @@ function semuaPost(req, res) {
   if (status && status !== 'semua') {
     query += ` WHERE posts.status = '${status}'`;
   }
-  query += ` ORDER BY posts.created_at DESC`;
+  query += ` ORDER BY posts.pinned DESC, posts.created_at DESC`;
   const posts = db.prepare(query).all();
   res.json(posts);
 }
@@ -50,6 +50,16 @@ function rejectPost(req, res) {
 function hapusPost(req, res) {
   db.prepare('DELETE FROM posts WHERE id = ?').run(req.params.id);
   res.json({ message: 'Postingan dihapus' });
+}
+
+// Sematkan / lepaskan postingan
+function togglePinPost(req, res) {
+  const { pin } = req.body;
+  const post = db.prepare('SELECT * FROM posts WHERE id = ?').get(req.params.id);
+  if (!post) return res.status(404).json({ error: 'Postingan tidak ditemukan' });
+
+  db.prepare('UPDATE posts SET pinned = ? WHERE id = ?').run(pin ? 1 : 0, req.params.id);
+  res.json({ message: pin ? 'Postingan disematkan' : 'Postingan dilepas dari sematan', pinned: !!pin });
 }
 
 // Ambil semua user
@@ -121,4 +131,4 @@ function notifikasi(req, res) {
   res.json(notifs);
 }
 
-module.exports = { semuaPost, approvePost, rejectPost, hapusPost, semuaUser, banUser, hapusUser, statistik, notifikasi };
+module.exports = { semuaPost, approvePost, rejectPost, hapusPost, togglePinPost, semuaUser, banUser, hapusUser, statistik, notifikasi };

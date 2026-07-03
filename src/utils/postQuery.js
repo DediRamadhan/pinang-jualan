@@ -29,10 +29,10 @@ function buildPostListQuery(options = {}) {
   }
 
   const sortClause = sort === 'termurah'
-    ? 'ORDER BY posts.harga ASC'
+    ? 'ORDER BY posts.pinned DESC, posts.harga ASC'
     : sort === 'termahal'
-      ? 'ORDER BY posts.harga DESC'
-      : 'ORDER BY posts.created_at DESC';
+      ? 'ORDER BY posts.pinned DESC, posts.harga DESC'
+      : 'ORDER BY posts.pinned DESC, posts.created_at DESC';
 
   query += ` ${sortClause}`;
 

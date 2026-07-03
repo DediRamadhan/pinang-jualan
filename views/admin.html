@@ -891,6 +891,9 @@
             <button class="action-btn btn-approve" onclick="approvePost(${post.id})">✅</button>
             <button class="action-btn btn-reject" onclick="bukaReject(${post.id})">❌</button>
           ` : ''}
+          <button class="action-btn btn-pin" onclick="togglePostPin(${post.id}, ${post.pinned ? 'false' : 'true'})">
+            ${post.pinned ? '📌 Unpin' : '📌 Pin'}
+          </button>
           <button class="action-btn btn-hapus" onclick="hapusPost(${post.id})">🗑️</button>
         </td>
       </tr>
@@ -1192,6 +1195,33 @@
       headers: { Authorization: `Bearer ${token}` }
     });
     if (res.ok) loadPosts('semua');
+  }
+
+  async function togglePostPin(id, pin) {
+    try {
+      const res = await fetch(`/api/admin/posts/${id}/pin`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ pin })
+      });
+      if (res.ok) {
+        loadPosts('semua');
+      } else {
+        const data = await res.text();
+        let parsed;
+        try {
+          parsed = JSON.parse(data);
+        } catch {
+          parsed = null;
+        }
+        alert((parsed && parsed.error) || 'Gagal mengubah status sematan');
+      }
+    } catch (err) {
+      alert('Gagal menghubungi server: ' + err.message);
+    }
   }
 
   function renderDashboardCharts(data) {
