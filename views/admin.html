@@ -90,6 +90,97 @@
       margin-bottom: 24px;
     }
 
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+
+    .graph-card {
+      background: white;
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+    }
+
+    .graph-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      color: #1e293b;
+    }
+
+    .bar-chart {
+      display: grid;
+      gap: 14px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: minmax(120px, 150px) 1fr auto;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .bar-row-label {
+      font-size: 13px;
+      color: #475569;
+    }
+
+    .bar-wrapper {
+      background: #f8fafc;
+      border-radius: 10px;
+      height: 12px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 10px;
+    }
+
+    .bar-fill.pending { background: #fbbf24; }
+    .bar-fill.approved { background: #34d399; }
+    .bar-fill.rejected { background: #f87171; }
+
+    .bar-value {
+      font-size: 12px;
+      color: #475569;
+      text-align: right;
+      min-width: 36px;
+    }
+
+    .user-chart {
+      display: grid;
+      gap: 12px;
+    }
+
+    .user-chart-number {
+      font-size: 42px;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    .user-chart-subtitle {
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .user-chart-bar {
+      background: #f8fafc;
+      border-radius: 10px;
+      height: 14px;
+      overflow: hidden;
+    }
+
+    .user-chart-fill {
+      height: 100%;
+      background: #2563eb;
+      width: 0;
+      transition: width 0.3s ease;
+    }
+
     .stat-card {
       background: white;
       border-radius: 12px;
@@ -569,6 +660,23 @@
       </div>
     </div>
 
+    <div class="charts-grid">
+      <div class="graph-card">
+        <div class="graph-title">Grafik Postingan Upload</div>
+        <div class="bar-chart" id="chart-posts"></div>
+      </div>
+      <div class="graph-card">
+        <div class="graph-title">Jumlah User</div>
+        <div class="user-chart">
+          <div class="user-chart-number" id="chart-users-value">-</div>
+          <div class="user-chart-subtitle">Total user terdaftar di marketplace</div>
+          <div class="user-chart-bar">
+            <div class="user-chart-fill" id="chart-users-fill"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="table-wrap">
       <table>
         <thead>
@@ -711,6 +819,8 @@
     document.getElementById('stat-pending').textContent = data.pending;
     document.getElementById('stat-approved').textContent = data.approved;
     document.getElementById('stat-rejected').textContent = data.rejected;
+
+    renderDashboardCharts(data);
 
     // Load postingan pending di dashboard
     const res2 = await fetch('/api/admin/posts?status=pending', {
@@ -1082,6 +1192,35 @@
       headers: { Authorization: `Bearer ${token}` }
     });
     if (res.ok) loadPosts('semua');
+  }
+
+  function renderDashboardCharts(data) {
+    const maxCount = Math.max(data.pending, data.approved, data.rejected, 1);
+    const chartPosts = document.getElementById('chart-posts');
+    if (chartPosts) {
+      chartPosts.innerHTML = ['pending', 'approved', 'rejected'].map(type => {
+        const label = type === 'pending' ? 'Pending' : type === 'approved' ? 'Disetujui' : 'Ditolak';
+        const count = data[type];
+        const width = Math.round((count / maxCount) * 100);
+        return `
+          <div class="bar-row">
+            <div class="bar-row-label">${label}</div>
+            <div class="bar-wrapper">
+              <div class="bar-fill ${type}" style="width:${width}%;"></div>
+            </div>
+            <div class="bar-value">${count}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    const usersValue = document.getElementById('chart-users-value');
+    const usersFill = document.getElementById('chart-users-fill');
+    if (usersValue) usersValue.textContent = data.totalUser;
+    if (usersFill) {
+      const percent = Math.min(100, Math.round((data.totalUser / Math.max(data.totalPost, 1)) * 100));
+      usersFill.style.width = `${percent}%`;
+    }
   }
 
   function logout() {

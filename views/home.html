@@ -220,6 +220,17 @@
       gap: 8px;
     }
 
+    .profile-greeting {
+      font-size: 14px;
+      color: #1f2937;
+      padding: 12px;
+      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
     .btn-logout {
       background: #fef2f2;
       color: #dc2626;
@@ -404,12 +415,17 @@
     .modal {
       background: white;
       border-radius: 16px;
-      width: 100%;
-      max-width: 480px;
+      width: min(88vw, 620px);
+      max-width: 620px;
       max-height: 90vh;
       overflow-y: auto;
-      padding: 28px;
+      padding: 22px;
       margin: 16px;
+    }
+
+    #modal-myposts .modal {
+      width: min(84vw, 560px);
+      max-width: 560px;
     }
 
     .modal-header {
@@ -522,48 +538,61 @@
 
     .wishlist-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
+      grid-template-columns: 1fr;
+      gap: 12px;
+        max-width: none;
+        margin: 0;
+        width: 100%;
     }
 
     .wishlist-item {
       background: white;
       border: 1px solid #e2e8f0;
-      border-radius: 14px;
+      border-radius: 12px;
       overflow: hidden;
       display: flex;
-      flex-direction: column;
-      box-shadow: 0 1px 10px rgba(15, 23, 42, 0.06);
-      transition: transform 0.2s, box-shadow 0.2s;
+      flex-direction: row;
+      gap: 10px;
+      box-shadow: 0 1px 6px rgba(15, 23, 42, 0.06);
+      transition: transform 0.15s, box-shadow 0.15s;
       cursor: pointer;
+      min-height: 96px;
+      padding: 8px;
+      align-items: center;
     }
 
     .wishlist-item:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.12);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(15, 23, 42, 0.10);
     }
 
     .wishlist-item-img {
-      width: 100%;
-      min-height: 160px;
-      max-height: 180px;
+      width: 96px;
+      min-width: 96px;
+      height: 96px;
       object-fit: cover;
       background: #f8fafc;
+      border-radius: 10px;
+      flex-shrink: 0;
     }
 
     .wishlist-item-content {
-      padding: 14px;
+      padding: 0;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 6px;
+      flex: 1 1 auto;
+      min-width: 0;
+      max-width: calc(100% - 108px);
+      overflow: hidden;
     }
 
     .wishlist-item-title {
-      font-size: 15px;
+      font-size: 13px;
       font-weight: 700;
       color: #1f2937;
-      line-height: 1.35;
-      min-height: 42px;
+      line-height: 1.25;
+      min-height: 32px;
     }
 
     .wishlist-item-meta {
@@ -572,26 +601,26 @@
       gap: 10px;
       flex-wrap: wrap;
       color: #475569;
-      font-size: 13px;
+      font-size: 12px;
     }
 
     .wishlist-item-meta span {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
     }
 
     .wishlist-item-price {
-      font-size: 17px;
+      font-size: 15px;
       font-weight: 700;
       color: #16a34a;
     }
 
     .wishlist-item-desc {
       color: #475569;
-      font-size: 14px;
-      line-height: 1.5;
-      max-height: 54px;
+      font-size: 12px;
+      line-height: 1.4;
+      max-height: 36px;
       overflow: hidden;
       text-overflow: ellipsis;
     }
@@ -606,13 +635,14 @@
 
     .wishlist-item-actions button {
       flex: 1;
-      min-height: 44px;
-      padding: 10px 14px;
+      min-height: 34px;
+      padding: 7px 10px;
       border-radius: 10px;
       border: none;
       cursor: pointer;
       font-weight: 600;
-      transition: background 0.2s;
+      font-size: 13px;
+      transition: background 0.15s;
     }
 
     .wishlist-item-actions .btn-wishlist-contact {
@@ -639,7 +669,6 @@
       .navbar {
         padding: 12px 16px;
         gap: 8px;
-        flex-wrap: wrap;
         position: sticky;
         top: 0;
         z-index: 100;
@@ -648,26 +677,27 @@
       .navbar-logo {
         font-size: 20px;
         font-weight: 700;
-        width: 100%;
-        margin-bottom: 4px;
+        width: auto;
+        margin-bottom: 0;
       }
 
       .navbar-menu {
-        width: 100%;
-        gap: 6px;
-        align-items: stretch;
-        justify-content: flex-start;
+        display: flex;
+        width: auto;
+        gap: 8px;
+        align-items: center;
+        justify-content: flex-end;
         position: relative;
+        flex-wrap: nowrap;
       }
 
       .navbar-menu button {
         padding: 10px 12px;
         font-size: 13px;
         border-radius: 8px;
-        flex: 1;
-        min-height: 44px; /* Touch target minimum */
         white-space: nowrap;
         min-width: 0;
+        flex: 0 0 auto;
       }
 
       .btn-profile {
@@ -706,24 +736,37 @@
       }
 
       .search-bar {
-        flex-direction: column;
+        display: flex;
+        flex-direction: row;
         gap: 8px;
         max-width: 100%;
       }
 
-      .search-bar input,
-      .search-bar button {
-        width: 100%;
-        padding: 12px 14px;
-        font-size: 16px; /* Prevent zoom */
-        border-radius: 8px;
-        min-height: 44px;
+      .search-bar input {
+        flex: 1;
+        min-width: 0;
       }
 
       .search-bar button {
-        background: #2563eb;
-        color: white;
-        font-weight: 600;
+        padding: 11px 14px;
+        min-width: 96px;
+        white-space: nowrap;
+      }
+
+      .wishlist-item {
+        gap: 10px;
+      }
+
+      .wishlist-item-meta {
+        font-size: 12px;
+      }
+
+      .wishlist-item-title {
+        font-size: 15px;
+      }
+
+      .wishlist-item-price {
+        font-size: 14px;
       }
 
       .kategori-list {
@@ -770,12 +813,33 @@
       }
 
       .wishlist-item {
-        border-radius: 12px;
+        flex-direction: column;
+        min-height: auto;
       }
 
       .wishlist-item-img {
+        width: 100%;
         min-height: 140px;
         max-height: 160px;
+        border-radius: 12px;
+      }
+
+      .wishlist-item-content {
+        gap: 10px;
+      }
+
+      .wishlist-item-actions button {
+        min-height: 42px;
+      }
+
+      .modal {
+        max-width: 100%;
+        padding: 20px;
+      }
+
+      .wishlist-item-actions button {
+        min-height: 42px;
+        font-size: 14px;
       }
 
       .post-info {
@@ -979,12 +1043,12 @@
 <nav class="navbar">
   <div class="navbar-logo">🛍️ MarketPinang</div>
   <div class="navbar-menu">
-    <span class="user-info">Halo, <strong id="nama-user"></strong></span>
     <button class="btn-upload" onclick="bukaModalUpload()">+ Jual Sekarang</button>
     <button class="btn-profile" id="btn-profile" type="button" onclick="toggleProfileMenu()">👤</button>
     <button class="btn-chat" onclick="window.location.href='/views/chat.html'">💬 Chat</button>
     <button class="btn-logout" onclick="logout()">Keluar</button>
     <div class="profile-menu" id="profile-menu">
+      <div class="profile-greeting">Halo, <strong id="nama-user"></strong></div>
       <button type="button" onclick="lihatWishlist()">💗 Wishlist</button>
       <button type="button" onclick="lihatPostinganSaya()">📦 Postingan Saya</button>
       <button type="button" onclick="window.location.href='/views/chat.html'">💬 Chat</button>
