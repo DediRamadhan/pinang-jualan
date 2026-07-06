@@ -129,6 +129,9 @@ if (!userColumns.includes('banned')) {
 }
 
 const postColumns = db.prepare("PRAGMA table_info(posts)").all().map(c => c.name);
+if (!postColumns.includes('fotos')) {
+  db.prepare('ALTER TABLE posts ADD COLUMN fotos TEXT DEFAULT NULL').run();
+}
 if (!postColumns.includes('pinned')) {
   db.prepare('ALTER TABLE posts ADD COLUMN pinned INTEGER DEFAULT 0').run();
 }

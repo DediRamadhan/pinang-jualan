@@ -4,7 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const { authUser } = require('../middleware/auth');
 const {
-  getAllPosts, getMyPosts, getPostById, createPost, deletePost, getWishlist, toggleWishlist, markPostAsSold
+  getAllPosts, getMyPosts, getPostById, createPost, updatePost, deletePost, getWishlist, toggleWishlist, markPostAsSold
 } = require('../controllers/postController');
 
 // Setup upload foto
@@ -32,7 +32,8 @@ router.get('/', authUser, getAllPosts);
 router.get('/saya', authUser, getMyPosts);
 router.get('/wishlist', authUser, getWishlist);
 router.get('/:id', getPostById);
-router.post('/', authUser, upload.single('foto'), createPost);
+router.post('/', authUser, upload.array('fotos', 5), createPost);
+router.put('/:id', authUser, upload.array('fotos', 5), updatePost);
 router.post('/:id/wishlist', authUser, toggleWishlist);
 router.post('/:id/sold', authUser, markPostAsSold);
 router.delete('/:id', authUser, deletePost);

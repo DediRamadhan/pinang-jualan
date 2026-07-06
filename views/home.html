@@ -359,6 +359,28 @@
       box-shadow: 0 6px 20px rgba(0,0,0,0.12);
     }
 
+    .post-slider {
+      position: relative;
+      width: 100%;
+      height: 180px;
+      overflow: hidden;
+      background: #f1f5f9;
+    }
+
+    .post-slider img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0;
+      transition: opacity .45s ease;
+    }
+
+    .post-slider img.active {
+      opacity: 1;
+    }
+
     .post-foto {
       width: 100%;
       height: 180px;
@@ -947,8 +969,127 @@
 
       /* DETAIL MODAL */
       .detail-foto {
-        max-height: 200px;
+        max-height: 260px;
+        width: 100%;
+        object-fit: cover;
+        border-radius: 14px;
         margin-bottom: 12px;
+        transition: transform .25s ease, box-shadow .25s ease;
+        cursor: pointer;
+      }
+
+      .detail-foto:hover {
+        transform: scale(1.02);
+        box-shadow: 0 18px 35px rgba(15, 23, 42, 0.18);
+      }
+
+      .detail-gallery {
+          position: relative;
+          overflow: hidden;
+          min-height: 300px;
+      }
+
+        .detail-gallery img {
+          width: 100%;
+          display: block;
+          opacity: 0;
+          position: absolute !important;
+          top: 0; left: 0; right: 0; bottom: 0;
+          object-fit: cover;
+          transition: opacity .25s ease;
+          cursor: zoom-in;
+        }
+
+      .detail-gallery img.active {
+        opacity: 1;
+        position: relative;
+        z-index: 1;
+      }
+
+      .detail-image-count {
+        font-size: 12px;
+        color: #475569;
+        margin-top: 8px;
+        text-align: right;
+      }
+
+      .image-lightbox-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(8, 15, 32, 0.85);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        padding: 20px;
+        backdrop-filter: blur(4px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .22s ease;
+      }
+
+      .image-lightbox-overlay.show {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .image-lightbox-overlay::after {
+        content: '✕';
+        position: absolute;
+        top: 18px;
+        right: 18px;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.18);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        cursor: pointer;
+      }
+
+      .lightbox-controls {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        gap: 12px;
+      }
+
+      .lightbox-arrow {
+        background: rgba(255,255,255,0.18);
+        border: none;
+        color: white;
+        font-size: 36px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0.9;
+      }
+
+      .lightbox-arrow:hover {
+        opacity: 1;
+      }
+
+      .image-lightbox-img {
+        max-width: 95%;
+        max-height: 95%;
+        border-radius: 20px;
+        box-shadow: 0 24px 60px rgba(0,0,0,0.35);
+        transform: translateY(10px) scale(0.96);
+        opacity: 0;
+        transition: transform .25s ease, opacity .25s ease;
+      }
+
+      .image-lightbox-overlay.show .image-lightbox-img {
+        transform: translateY(0) scale(1);
+        opacity: 1;
       }
 
       .detail-harga {
@@ -1156,8 +1297,8 @@
       <textarea id="up-deskripsi" placeholder="Jelaskan kondisi, spesifikasi, dll..."></textarea>
     </div>
     <div class="field">
-      <label>Foto Barang (opsional, max 5MB)</label>
-      <input type="file" id="up-foto" accept="image/*">
+      <label>Foto Barang (opsional, max 5MB, maksimal 5 foto)</label>
+      <input type="file" id="up-fotos" name="fotos" accept="image/*" multiple>
     </div>
     <button class="btn-submit" id="btn-submit-upload" onclick="uploadPost()">Kirim untuk Direview</button>
   </div>
@@ -1176,6 +1317,14 @@
     <div class="detail-desc" id="detail-desc"></div>
     <div style="font-size:13px;color:#64748b" id="detail-penjual"></div>
     <button class="btn-hubungi" id="btn-hubungi">💬 Hubungi Penjual</button>
+  </div>
+</div>
+
+<div class="image-lightbox-overlay" id="modal-image-full" onclick="closeImageFull(event)">
+  <div class="lightbox-controls">
+    <button class="lightbox-arrow lightbox-prev" onclick="lightboxPrev(event)">‹</button>
+    <img id="image-full" class="image-lightbox-img" src="" alt="Gambar penuh">
+    <button class="lightbox-arrow lightbox-next" onclick="lightboxNext(event)">›</button>
   </div>
 </div>
 
@@ -1204,6 +1353,21 @@
   let sortAktif = 'terbaru';
   let hargaMinAktif = '';
   let hargaMaxAktif = '';
+  let editingPostId = null;
+
+  function resetUploadForm() {
+    editingPostId = null;
+    document.getElementById('modal-upload').querySelector('h2').textContent = '📦 Jual Barang';
+    document.getElementById('btn-submit-upload').textContent = 'Kirim untuk Direview';
+    document.getElementById('up-judul').value = '';
+    document.getElementById('up-kategori').value = '';
+    document.getElementById('up-harga').value = '';
+    document.getElementById('up-deskripsi').value = '';
+    document.getElementById('up-fotos').value = '';
+    const alertEl = document.getElementById('alert-upload');
+    alertEl.style.display = 'none';
+    alertEl.textContent = '';
+  }
 
   // Load postingan
   async function loadPosts() {
@@ -1233,10 +1397,14 @@
 
       container.innerHTML = posts.map(post => `
         <div class="post-card" onclick="lihatDetail(${post.id})">
-          ${post.foto
-            ? `<img class="post-foto" src="${post.foto}" alt="${post.judul}">`
-            : `<div class="post-foto-placeholder">📦</div>`
-          }
+          <div class="post-slider" data-post-id="${post.id}">
+            ${post.fotos && post.fotos.length
+              ? post.fotos.map((src, index) => `
+                  <img class="slide${index === 0 ? ' active' : ''}" src="${src}" alt="${post.judul} foto ${index + 1}">
+                `).join('')
+              : `<div class="post-foto-placeholder">📦</div>`
+            }
+          </div>
           <div class="post-info">
             <div class="post-kategori">${post.kategori}</div>
             <div class="post-judul">${post.judul}</div>
@@ -1249,6 +1417,19 @@
           </div>
         </div>
       `).join('');
+      initPostSliders();
+      // Attach click handlers on each post-slider image so user can open lightbox directly from grid
+      document.querySelectorAll('.post-slider').forEach(containerEl => {
+        const id = containerEl.dataset.postId;
+        const imgs = Array.from(containerEl.querySelectorAll('img')).map(i => i.getAttribute('src'));
+        containerEl.querySelectorAll('img').forEach(imgEl => {
+          imgEl.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const src = imgEl.getAttribute('src');
+            showImageFull(src, imgs);
+          });
+        });
+      });
     } catch {
       container.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div>Gagal memuat postingan</div></div>';
     }
@@ -1299,14 +1480,25 @@
     detailPenjual.appendChild(sellerLink);
 
     const fotoContainer = document.getElementById('detail-foto-container');
-    fotoContainer.innerHTML = post.foto
-      ? `<img class="detail-foto" src="${post.foto}">`
-      : '';
+    const imageList = post.fotos && post.fotos.length ? post.fotos : [];
+    if (imageList.length) {
+      fotoContainer.innerHTML = `<div class="detail-gallery">
+          ${imageList.map((src, index) => `
+            <img class="detail-foto${index === 0 ? ' active' : ''}" src="${src}" alt="${post.judul} foto ${index + 1}">
+          `).join('')}
+        </div>
+        <div class="detail-image-count" id="detail-image-count">1 / ${imageList.length}</div>`;
+      document.querySelectorAll('.detail-gallery img').forEach(img => {
+        img.addEventListener('click', () => showImageFull(img.getAttribute('src'), imageList));
+      });
+    } else {
+      fotoContainer.innerHTML = '<div class="detail-gallery"><div class="post-foto-placeholder">📦</div></div>';
+    }
 
     const btnHubungi = document.getElementById('btn-hubungi');
-if (post.penjual_id == userId) {
-  btnHubungi.style.display = 'none';
-} else {
+    if (post.penjual_id == userId) {
+      btnHubungi.style.display = 'none';
+    } else {
   btnHubungi.style.display = 'block';
   btnHubungi.onclick = async () => {
     try {
@@ -1340,7 +1532,7 @@ if (post.penjual_id == userId) {
       localStorage.setItem('chat_post_id', post.id);
       localStorage.setItem('chat_post_judul', post.judul);
       localStorage.setItem('chat_post_harga', post.harga);
-      localStorage.setItem('chat_post_foto', post.foto || '');
+      localStorage.setItem('chat_post_foto', (post.fotos && post.fotos.length ? post.fotos[0] : post.foto) || '');
       localStorage.setItem('chat_post_deskripsi', post.deskripsi);
       
       // Redirect ke chat
@@ -1354,9 +1546,88 @@ if (post.penjual_id == userId) {
 }
 
     bukaModal('modal-detail');
+    updateDetailGalleryCount();
   }
 
   // Postingan saya
+  let lightboxImages = [];
+  let lightboxIndex = 0;
+  let touchStartX = null;
+
+  function showImageFull(src, images = []) {
+    lightboxImages = images.length ? images : [src];
+    lightboxIndex = lightboxImages.indexOf(src);
+    if (lightboxIndex === -1) lightboxIndex = 0;
+    document.querySelectorAll('.detail-gallery img').forEach(img => {
+      img.classList.toggle('active', img.getAttribute('src') === src);
+    });
+    updateDetailGalleryCount();
+    const overlay = document.getElementById('modal-image-full');
+    const image = document.getElementById('image-full');
+    image.src = lightboxImages[lightboxIndex];
+    overlay.classList.add('show');
+  }
+
+  function lightboxPrev() {
+    if (!lightboxImages.length) return;
+    lightboxIndex = (lightboxIndex - 1 + lightboxImages.length) % lightboxImages.length;
+    const src = lightboxImages[lightboxIndex];
+    document.getElementById('image-full').src = src;
+    document.querySelectorAll('.detail-gallery img').forEach(img => {
+      img.classList.toggle('active', img.getAttribute('src') === src);
+    });
+    updateDetailGalleryCount();
+  }
+
+  function lightboxNext() {
+    if (!lightboxImages.length) return;
+    lightboxIndex = (lightboxIndex + 1) % lightboxImages.length;
+    const src = lightboxImages[lightboxIndex];
+    document.getElementById('image-full').src = src;
+    document.querySelectorAll('.detail-gallery img').forEach(img => {
+      img.classList.toggle('active', img.getAttribute('src') === src);
+    });
+    updateDetailGalleryCount();
+  }
+
+  function closeImageFull(event) {
+    if (event.target.id !== 'modal-image-full' && event.target.id !== 'image-full') return;
+    const overlay = document.getElementById('modal-image-full');
+    overlay.classList.remove('show');
+    document.getElementById('image-full').src = '';
+  }
+
+  function updateDetailGalleryCount() {
+    const countEl = document.getElementById('detail-image-count');
+    if (!countEl) return;
+    const imgs = Array.from(document.querySelectorAll('.detail-gallery img'));
+    const activeIndex = imgs.findIndex(img => img.classList.contains('active'));
+    const total = imgs.length;
+    countEl.textContent = `${activeIndex >= 0 ? activeIndex + 1 : 1} / ${total}`;
+  }
+
+  function attachLightboxTouch() {
+    const image = document.getElementById('image-full');
+    image.addEventListener('touchstart', (event) => {
+      touchStartX = event.changedTouches[0].clientX;
+    });
+    image.addEventListener('touchend', (event) => {
+      if (touchStartX === null) return;
+      const diff = event.changedTouches[0].clientX - touchStartX;
+      if (diff > 40) lightboxPrev();
+      if (diff < -40) lightboxNext();
+      touchStartX = null;
+    });
+  }
+
+  function handleLightboxKeys(event) {
+    const overlay = document.getElementById('modal-image-full');
+    if (!overlay.classList.contains('show')) return;
+    if (event.key === 'ArrowLeft') lightboxPrev();
+    if (event.key === 'ArrowRight') lightboxNext();
+    if (event.key === 'Escape') closeImageFull({ target: overlay });
+  }
+
   async function lihatPostinganSaya() {
     const res = await fetch('/api/posts/saya', {
       headers: { Authorization: `Bearer ${token}` }
@@ -1369,7 +1640,7 @@ if (post.penjual_id == userId) {
     } else {
       container.innerHTML = posts.map(post => `
         <div style="padding:12px;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:10px">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
             <div>
               <div style="font-weight:600;color:#1e293b">${post.judul}</div>
               <div style="font-size:13px;color:#64748b;margin-top:2px">Rp ${Number(post.harga).toLocaleString('id-ID')}</div>
@@ -1383,9 +1654,14 @@ if (post.penjual_id == userId) {
           ${post.status==='rejected' && post.alasan_reject
             ? `<div style="font-size:12px;color:#dc2626;margin-top:6px">Alasan: ${post.alasan_reject}</div>`
             : ''}
-          <button onclick="hapusPost(${post.id})" style="margin-top:10px;padding:6px 14px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:6px;cursor:pointer;font-size:13px">
-            Hapus
-          </button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+            <button onclick="editMyPost(${post.id})" style="padding:8px 14px;background:#eff6ff;color:#2563eb;border:1px solid #c7d2fe;border-radius:6px;cursor:pointer;font-size:13px">
+              Edit
+            </button>
+            <button onclick="hapusPost(${post.id})" style="padding:8px 14px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:6px;cursor:pointer;font-size:13px">
+              Hapus
+            </button>
+          </div>
         </div>
       `).join('');
     }
@@ -1421,9 +1697,11 @@ if (post.penjual_id == userId) {
         <div class="wishlist-grid">
           ${posts.map(post => `
             <div class="wishlist-item" onclick="lihatDetail(${post.id})">
-              ${post.foto
-                ? `<img class="wishlist-item-img" src="${post.foto}" alt="${post.judul}">`
-                : `<div class="wishlist-item-img" style="display:flex;align-items:center;justify-content:center;font-size:28px;">📦</div>`
+              ${post.fotos && post.fotos.length
+                ? `<img class="wishlist-item-img" src="${post.fotos[0]}" alt="${post.judul}">`
+                : post.foto
+                  ? `<img class="wishlist-item-img" src="${post.foto}" alt="${post.judul}">`
+                  : `<div class="wishlist-item-img" style="display:flex;align-items:center;justify-content:center;font-size:28px;">📦</div>`
               }
               <div class="wishlist-item-content">
                 <div class="wishlist-item-title">${post.judul}</div>
@@ -1443,7 +1721,7 @@ if (post.penjual_id == userId) {
     }
 
     bukaModal('modal-myposts');
-    document.querySelector('#modal-myposts .modal-header h2').textContent = '💗 Wishlist Saya';
+    document.querySelector('#modal-myposts .modal-header h2').textContent = '💗 Postingan';
   }
 
   function hubungiPenjualFromButton(button) {
@@ -1495,7 +1773,7 @@ if (post.penjual_id == userId) {
       localStorage.setItem('chat_post_id', post.id);
       localStorage.setItem('chat_post_judul', post.judul);
       localStorage.setItem('chat_post_harga', post.harga);
-      localStorage.setItem('chat_post_foto', post.foto || '');
+      localStorage.setItem('chat_post_foto', (post.fotos && post.fotos.length ? post.fotos[0] : post.foto) || '');
       localStorage.setItem('chat_post_deskripsi', post.deskripsi);
 
       window.location.href = '/views/chat.html';
@@ -1523,45 +1801,116 @@ if (post.penjual_id == userId) {
     const kategori = document.getElementById('up-kategori').value;
     const harga = document.getElementById('up-harga').value;
     const deskripsi = document.getElementById('up-deskripsi').value;
-    const foto = document.getElementById('up-foto').files[0];
+    const files = Array.from(document.getElementById('up-fotos').files || []);
 
     const formData = new FormData();
     formData.append('judul', judul);
     formData.append('kategori', kategori);
     formData.append('harga', harga);
     formData.append('deskripsi', deskripsi);
-    if (foto) formData.append('foto', foto);
+    files.slice(0, 5).forEach(file => formData.append('fotos', file));
 
     const btn = document.getElementById('btn-submit-upload');
     btn.disabled = true;
-    btn.textContent = 'Mengirim...';
+    btn.textContent = editingPostId ? 'Menyimpan...' : 'Mengirim...';
 
     try {
-      const res = await fetch('/api/posts', {
-        method: 'POST',
+      const url = editingPostId ? `/api/posts/${editingPostId}` : '/api/posts';
+      const method = editingPostId ? 'PUT' : 'POST';
+      const res = await fetch(url, {
+        method,
         headers: { Authorization: `Bearer ${token}` },
         body: formData
       });
       const data = await res.json();
 
       if (!res.ok) {
-        showAlert('alert-upload', data.error, 'error');
+        showAlert('alert-upload', data.error || data.message || 'Terjadi kesalahan', 'error');
       } else {
-        showAlert('alert-upload', '✅ Postingan dikirim! Menunggu persetujuan admin.', 'success');
-        setTimeout(() => tutupModal('modal-upload'), 1500);
+        const message = editingPostId
+          ? '✅ Postingan berhasil diperbarui.'
+          : '✅ Postingan dikirim! Menunggu persetujuan admin.';
+        showAlert('alert-upload', message, 'success');
+        setTimeout(() => {
+          tutupModal('modal-upload');
+          resetUploadForm();
+          lihatPostinganSaya();
+          loadPosts();
+        }, 1200);
       }
     } catch {
       showAlert('alert-upload', 'Gagal terhubung ke server', 'error');
     }
 
     btn.disabled = false;
-    btn.textContent = 'Kirim untuk Direview';
+    btn.textContent = editingPostId ? 'Simpan Perubahan' : 'Kirim untuk Direview';
+  }
+
+  async function editMyPost(id) {
+    try {
+      const res = await fetch(`/api/posts/${id}`);
+      if (!res.ok) throw new Error('Postingan tidak ditemukan');
+      const post = await res.json();
+
+      if (String(post.penjual_id) !== String(userId)) {
+        return alert('Anda hanya dapat mengedit postingan Anda sendiri.');
+      }
+
+      editingPostId = id;
+      document.getElementById('modal-upload').querySelector('h2').textContent = '✏️ Edit Postingan';
+      document.getElementById('btn-submit-upload').textContent = 'Simpan Perubahan';
+      document.getElementById('up-judul').value = post.judul || '';
+      document.getElementById('up-kategori').value = post.kategori || '';
+      document.getElementById('up-harga').value = post.harga || '';
+      document.getElementById('up-deskripsi').value = post.deskripsi || '';
+      document.getElementById('up-fotos').value = '';
+
+      if (post.status === 'rejected' && post.alasan_reject) {
+        showAlert('alert-upload', `Postingan ini sebelumnya ditolak: ${post.alasan_reject}. Edit akan mengirim ulang untuk review.`, 'success');
+      } else {
+        const alertEl = document.getElementById('alert-upload');
+        alertEl.style.display = 'none';
+        alertEl.textContent = '';
+      }
+
+      tutupModal('modal-myposts');
+      bukaModal('modal-upload');
+    } catch (err) {
+      alert(err.message);
+    }
+  }
+
+  function bukaModalUpload() {
+    resetUploadForm();
+    bukaModal('modal-upload');
   }
 
   // Helpers
+  const sliderIntervals = {};
+
+  function clearPostSliders() {
+    Object.values(sliderIntervals).forEach(clearInterval);
+    Object.keys(sliderIntervals).forEach(key => delete sliderIntervals[key]);
+  }
+
+  function initPostSliders() {
+    clearPostSliders();
+    document.querySelectorAll('.post-slider').forEach(container => {
+      const slides = container.querySelectorAll('.slide');
+      if (slides.length < 2) return;
+      let current = 0;
+      slides.forEach((slide, index) => slide.classList.toggle('active', index === 0));
+      const id = container.dataset.postId;
+      sliderIntervals[id] = setInterval(() => {
+        slides[current].classList.remove('active');
+        current = (current + 1) % slides.length;
+        slides[current].classList.add('active');
+      }, 3500);
+    });
+  }
+
   function bukaModal(id) { document.getElementById(id).classList.add('show'); }
   function tutupModal(id) { document.getElementById(id).classList.remove('show'); }
-  function bukaModalUpload() { bukaModal('modal-upload'); }
 
   function showAlert(id, pesan, tipe) {
     const el = document.getElementById(id);
@@ -1647,6 +1996,8 @@ if (post.penjual_id == userId) {
 
   // Load pertama kali
   loadPosts();
+  attachLightboxTouch();
+  document.addEventListener('keydown', handleLightboxKeys);
   updateChatBadge();
   initChatNotifications();
 </script>
