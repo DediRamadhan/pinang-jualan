@@ -305,6 +305,7 @@
     overflow-wrap: break-word;
     line-height: 1.5;
     box-sizing: border-box;
+    overflow: hidden;
 }
 
 .bubble-saya {
@@ -523,6 +524,45 @@
 
     .btn-kirim:hover { background: #1d4ed8; }
     .btn-kirim:disabled { background: #93c5fd; cursor: not-allowed; }
+
+    .btn-attach {
+      padding: 10px 12px;
+      background: #f8fafc;
+      color: #2563eb;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 16px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .btn-attach:hover { background: #e2e8f0; }
+
+    .message-image {
+      display: block;
+      max-width: 220px;
+      max-height: 220px;
+      width: 100%;
+      height: auto;
+      border-radius: 12px;
+      margin-bottom: 6px;
+      object-fit: cover;
+      border: 1px solid rgba(0,0,0,0.06);
+      margin: 0;
+    }
+
+    .message-image-link {
+      display: block;
+      max-width: 220px;
+      max-height: 220px;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .message-text {
+      white-space: pre-wrap;
+      line-height: 1.45;
+    }
 
     /* CHAT CLOSED */
     .chat-closed-banner {
@@ -1290,6 +1330,8 @@
             <div class="quick-actions-panel" id="quick-actions-panel"></div>
           </div>
           <div class="input-row">
+            <input type="file" id="input-image" accept="image/*" style="display:none" onchange="uploadSelectedImage(event)">
+            <button class="btn-attach" type="button" onclick="document.getElementById('input-image').click()">📷</button>
             <textarea class="chat-input" id="input-pesan" placeholder="Tulis pesan..." rows="1" onkeydown="handleEnter(event)"></textarea>
             <button class="btn-kirim" onclick="kirimPesan()">Kirim</button>
           </div>
@@ -1393,14 +1435,20 @@
     hour: '2-digit', minute: '2-digit'
   });
 
+  const attachmentHtml = pesan.attachment_type === 'image' && pesan.attachment_url
+    ? `<a class="message-image-link" href="${escapeAttr(pesan.attachment_url)}" target="_blank" rel="noopener"><img class="message-image" src="${escapeAttr(pesan.attachment_url)}" alt="Gambar chat"></a>`
+    : '';
+  const textHtml = pesan.isi
+    ? `<div class="message-text">${escapeHtml(pesan.isi)}</div>`
+    : '';
+
   const div = document.createElement('div');
-  // Pastikan class 'saya' ada untuk pesan yang dikirim user
   div.className = `bubble-wrap ${dariku ? 'saya' : ''}`; 
   
   div.innerHTML = `
       ${!dariku ? `<div class="avatar avatar-user" style="width:28px;height:28px;font-size:11px">${pesan.nama_sender.charAt(0)}</div>` : ''}
       <div>
-          <div class="bubble ${dariku ? 'bubble-saya' : 'bubble-lawan'}">${escapeHtml(pesan.isi)}</div>
+          <div class="bubble ${dariku ? 'bubble-saya' : 'bubble-lawan'}">${attachmentHtml}${textHtml}</div>
           <div class="bubble-time" style="font-size:10px; color:#999; text-align: ${dariku ? 'right' : 'left'}">${waktu}</div>
       </div>
   `;
@@ -1633,11 +1681,61 @@
     }
   }
 
+  async function uploadSelectedImage(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!lawanAktif) {
+      showStatusMessage('Buka chat dulu sebelum mengirim gambar', 'error');
+      event.target.value = '';
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      showStatusMessage('File harus berupa gambar', 'error');
+      event.target.value = '';
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const res = await fetch('/api/messages/upload', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData
+      });
+
+      const text = await res.text();
+      let data = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (parseErr) {
+        console.warn('Upload response is not JSON', text);
+        throw new Error(text || 'Gagal mengunggah gambar');
+      }
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Gagal mengunggah gambar');
+      }
+
+      const input = document.getElementById('input-pesan');
+      const caption = input?.value.trim() || '';
+      await kirimPesan(data.url, 'image', caption);
+      event.target.value = '';
+    } catch (err) {
+      console.error('Error upload gambar:', err);
+      showStatusMessage('Gagal mengirim gambar: ' + err.message, 'error');
+      event.target.value = '';
+    }
+  }
+
   // Kirim pesan
-  async function kirimPesan() {
+  async function kirimPesan(attachmentUrl = null, attachmentType = null, customText = null) {
     const input = document.getElementById('input-pesan');
-    const isi = input?.value.trim();
-    if (!isi || !lawanAktif) return;
+    const isi = (customText ?? input?.value ?? '').trim();
+    if ((!isi && !attachmentUrl) || !lawanAktif) return;
 
     // Buat chat thread jika belum ada
     if (!chatThreadAktif) {
@@ -1656,8 +1754,10 @@
       chatThreadAktif = thread.id;
     }
 
-    input.value = '';
-    input.style.height = 'auto';
+    if (input) {
+      input.value = '';
+      input.style.height = 'auto';
+    }
 
     try {
       const res = await fetch('/api/messages', {
@@ -1666,7 +1766,13 @@
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ receiver_id: lawanAktif, isi, chat_id: chatThreadAktif })
+        body: JSON.stringify({
+          receiver_id: lawanAktif,
+          isi,
+          chat_id: chatThreadAktif,
+          attachment_url: attachmentUrl,
+          attachment_type: attachmentType
+        })
       });
 
       if (!res.ok) {

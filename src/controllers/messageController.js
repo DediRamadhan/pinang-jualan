@@ -16,7 +16,7 @@ function getDaftarChat(req, res) {
   try {
     const daftar = db.prepare(`
       SELECT u.id, u.nama, u.role,
-             m.isi as pesan_terakhir,
+             CASE WHEN m.attachment_type = 'image' THEN '[Gambar]' ELSE m.isi END as pesan_terakhir,
              m.created_at,
              COALESCE((SELECT COUNT(*) FROM messages 
                        WHERE receiver_id = ? AND sender_id = u.id AND dibaca = 0), 0) as belum_dibaca
@@ -81,7 +81,7 @@ function getDaftarChatThreads(req, res) {
         CASE WHEN ct.user1_id = ? THEN u2.id ELSE u1.id END as counterpart_id,
         CASE WHEN ct.user1_id = ? THEN u2.nama ELSE u1.nama END as counterpart_nama,
         CASE WHEN ct.user1_id = ? THEN u2.role ELSE u1.role END as counterpart_role,
-        COALESCE((SELECT isi FROM messages m WHERE m.chat_id = ct.id ORDER BY m.created_at DESC LIMIT 1), '[Chat dimulai]') as pesan_terakhir,
+        COALESCE((SELECT CASE WHEN m.attachment_type = 'image' THEN '[Gambar]' ELSE m.isi END FROM messages m WHERE m.chat_id = ct.id ORDER BY m.created_at DESC LIMIT 1), '[Chat dimulai]') as pesan_terakhir,
         COALESCE((SELECT COUNT(*) FROM messages m WHERE m.chat_id = ct.id AND m.receiver_id = ? AND m.dibaca = 0), 0) as belum_dibaca,
         COALESCE((SELECT MAX(m.created_at) FROM messages m WHERE m.chat_id = ct.id), ct.created_at) as last_activity,
         ct.status,
@@ -163,13 +163,16 @@ function getRiwayatChatByThread(req, res) {
 }
 
 function kirimPesan(req, res) {
-  const { receiver_id, isi, chat_id } = req.body;
+  const { receiver_id, isi, chat_id, attachment_url, attachment_type } = req.body;
   const sender_id = req.user.id;
   let chosenChatId = chat_id ? parseInt(chat_id, 10) : null;
   let actualReceiverId = receiver_id ? parseInt(receiver_id, 10) : null;
+  const pesanTeks = (isi || '').trim();
+  const adaLampiran = Boolean(attachment_url);
 
-  if (!isi || !isi.trim())
+  if (!pesanTeks && !adaLampiran) {
     return res.status(400).json({ error: 'Pesan tidak boleh kosong' });
+  }
 
   if (!chosenChatId && !actualReceiverId)
     return res.status(400).json({ error: 'Penerima tidak valid' });
@@ -199,9 +202,9 @@ function kirimPesan(req, res) {
   }
 
   const result = db.prepare(`
-    INSERT INTO messages (sender_id, receiver_id, chat_id, isi)
-    VALUES (?, ?, ?, ?)
-  `).run(sender_id, actualReceiverId, chosenChatId, isi.trim());
+    INSERT INTO messages (sender_id, receiver_id, chat_id, isi, attachment_type, attachment_url)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(sender_id, actualReceiverId, chosenChatId, pesanTeks, attachment_type || null, attachment_url || null);
 
   const pesan = db.prepare(`
     SELECT m.*, u.nama as nama_sender

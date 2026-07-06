@@ -39,7 +39,9 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     sender_id INTEGER NOT NULL,
     receiver_id INTEGER NOT NULL,
-    isi TEXT NOT NULL,
+    isi TEXT NOT NULL DEFAULT '',
+    attachment_type TEXT DEFAULT NULL,
+    attachment_url TEXT DEFAULT NULL,
     dibaca INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (sender_id) REFERENCES users(id),
@@ -113,6 +115,12 @@ db.exec(`
 const messageColumns = db.prepare("PRAGMA table_info(messages)").all().map(c => c.name);
 if (!messageColumns.includes('chat_id')) {
   db.prepare('ALTER TABLE messages ADD COLUMN chat_id INTEGER').run();
+}
+if (!messageColumns.includes('attachment_type')) {
+  db.prepare('ALTER TABLE messages ADD COLUMN attachment_type TEXT').run();
+}
+if (!messageColumns.includes('attachment_url')) {
+  db.prepare('ALTER TABLE messages ADD COLUMN attachment_url TEXT').run();
 }
 
 const userColumns = db.prepare("PRAGMA table_info(users)").all().map(c => c.name);
