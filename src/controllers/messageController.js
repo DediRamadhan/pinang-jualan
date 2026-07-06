@@ -1,5 +1,25 @@
 const db = require('../database');
 
+function getHiddenChatEntries(userId) {
+  return db.prepare(`
+    SELECT chat_id, counterpart_id
+    FROM chat_hidden
+    WHERE user_id = ?
+  `).all(userId);
+}
+
+function isConversationHidden(hiddenEntries, chatId, counterpartId) {
+  if (!hiddenEntries?.length) return false;
+  const targetChatId = chatId ? Number(chatId) : null;
+  const targetCounterpartId = counterpartId ? Number(counterpartId) : null;
+  return hiddenEntries.some(entry => {
+    const entryChatId = entry.chat_id ? Number(entry.chat_id) : null;
+    const entryCounterpartId = entry.counterpart_id ? Number(entry.counterpart_id) : null;
+    return (targetChatId && entryChatId && targetChatId === entryChatId) ||
+      (targetCounterpartId && entryCounterpartId && targetCounterpartId === entryCounterpartId);
+  });
+}
+
 function findActiveChatThread(userId, otherId) {
   return db.prepare(`
     SELECT * FROM chat_threads
@@ -95,9 +115,11 @@ function getDaftarChatThreads(req, res) {
       ORDER BY last_activity DESC
     `).all(userId, userId, userId, userId, userId, userId);
 
+    const hiddenEntries = getHiddenChatEntries(userId);
     const unique = [];
     const seen = new Set();
     for (const thread of threads) {
+      if (isConversationHidden(hiddenEntries, thread.chat_id, thread.counterpart_id)) continue;
       if (!seen.has(thread.counterpart_id)) {
         seen.add(thread.counterpart_id);
         unique.push(thread);
@@ -245,6 +267,42 @@ function kirimPesan(req, res) {
   res.json(pesan);
 }
 
+function hideChat(req, res) {
+  const userId = req.user.id;
+  const chatId = req.body?.chat_id ? parseInt(req.body.chat_id, 10) : null;
+  const counterpartId = req.body?.counterpart_id ? parseInt(req.body.counterpart_id, 10) : null;
+
+  if (!chatId && !counterpartId) {
+    return res.status(400).json({ error: 'chat_id atau counterpart_id wajib diisi' });
+  }
+
+  let resolvedCounterpartId = counterpartId;
+  if (chatId) {
+    const thread = db.prepare(`
+      SELECT * FROM chat_threads
+      WHERE id = ? AND (user1_id = ? OR user2_id = ?)
+    `).get(chatId, userId, userId);
+
+    if (!thread) {
+      return res.status(404).json({ error: 'Percakapan tidak ditemukan' });
+    }
+
+    resolvedCounterpartId = thread.user1_id === userId ? thread.user2_id : thread.user1_id;
+  }
+
+  const hiddenEntries = getHiddenChatEntries(userId);
+  if (isConversationHidden(hiddenEntries, chatId, resolvedCounterpartId)) {
+    return res.json({ message: 'Percakapan sudah disembunyikan' });
+  }
+
+  db.prepare(`
+    INSERT INTO chat_hidden (user_id, chat_id, counterpart_id)
+    VALUES (?, ?, ?)
+  `).run(userId, chatId, resolvedCounterpartId);
+
+  res.json({ message: 'Percakapan disembunyikan' });
+}
+
 function getDaftarUser(req, res) {
   const users = db.prepare(`
     SELECT id, nama, role FROM users
@@ -260,5 +318,7 @@ module.exports = {
   getRiwayatChat,
   getRiwayatChatByThread,
   kirimPesan,
-  getDaftarUser
+  hideChat,
+  getDaftarUser,
+  isConversationHidden
 };

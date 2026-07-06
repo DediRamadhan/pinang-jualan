@@ -125,6 +125,35 @@
     .chat-item:hover { background: #f8fafc; }
     .chat-item.active { background: #eff6ff; }
 
+    .chat-item-content {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .chat-item-actions {
+      margin-left: 6px;
+      flex-shrink: 0;
+    }
+
+    .btn-delete-chat {
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 6px;
+      font-size: 13px;
+      line-height: 1;
+    }
+
+    .btn-delete-chat:hover {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+
     .avatar {
       width: 40px;
       height: 40px;
@@ -1315,12 +1344,26 @@
 
             if (info.chat.status !== 'active') {
               chatArea.innerHTML = `
+                <div class="chat-header">
+                  <div class="avatar ${lawanRoleAktif === 'admin' ? 'avatar-admin' : 'avatar-user'}" style="width:36px;height:36px;font-size:13px">
+                    ${escapeHtml(nama.charAt(0).toUpperCase())}
+                  </div>
+                  <div>
+                    <div class="chat-header-nama">${escapeHtml(nama)} ${lawanRoleAktif === 'admin' ? '👑 Admin' : ''}</div>
+                    <div class="chat-header-status">${adminNameAktif ? `👤 Admin: ${escapeHtml(adminNameAktif)} hadir` : '● Online'}</div>
+                  </div>
+                </div>
+                <div id="status-message" class="status-message"></div>
                 <div class="chat-closed-banner">
                   Chat telah ditutup (Status: ${info.chat.status === 'completed' ? 'Selesai' : 'Tidak Tertarik'})
                 </div>
                 <div class="messages-wrap" id="messages-wrap"></div>
               `;
               await loadRiwayatChat();
+              if (isMobileView()) {
+                showChatArea();
+              }
+              scrollBawah();
               return;
             }
           }
@@ -2039,15 +2082,20 @@
       item.dataset.role = counterpartRole;
 
       item.innerHTML = `
-        <div class="avatar ${counterpartRole === 'admin' ? 'avatar-admin' : 'avatar-user'}">
-          ${escapeHtml(counterpartName.charAt(0).toUpperCase())}
-        </div>
-        <div class="chat-item-info">
-          <div class="chat-item-nama">
-            <span>${escapeHtml(counterpartName)} ${counterpartRole === 'admin' ? '👑' : ''}</span>
-            ${d.belum_dibaca > 0 ? `<span class="badge-unread">${d.belum_dibaca}</span>` : ''}
+        <div class="chat-item-content">
+          <div class="avatar ${counterpartRole === 'admin' ? 'avatar-admin' : 'avatar-user'}">
+            ${escapeHtml(counterpartName.charAt(0).toUpperCase())}
           </div>
-          <div class="chat-item-preview">${escapeHtml(d.pesan_terakhir || '')}</div>
+          <div class="chat-item-info">
+            <div class="chat-item-nama">
+              <span>${escapeHtml(counterpartName)} ${counterpartRole === 'admin' ? '👑' : ''}</span>
+              ${d.belum_dibaca > 0 ? `<span class="badge-unread">${d.belum_dibaca}</span>` : ''}
+            </div>
+            <div class="chat-item-preview">${escapeHtml(d.pesan_terakhir || '')}</div>
+          </div>
+        </div>
+        <div class="chat-item-actions">
+          <button class="btn-delete-chat" type="button" title="Hapus percakapan" onclick="event.stopPropagation(); hapusChatPercakapan(${threadId || 0}, ${counterpartId})">🗑️</button>
         </div>
       `;
 
@@ -2062,6 +2110,44 @@
 
       container.appendChild(item);
     });
+  }
+
+  async function hapusChatPercakapan(chatId, counterpartId) {
+    if (!confirm('Hapus percakapan ini dari daftar chat?')) return;
+
+    try {
+      const res = await fetch('/api/messages/hide', {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ chat_id: chatId || null, counterpart_id: counterpartId || null })
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Gagal menghapus percakapan');
+      }
+
+      if (lawanAktif && Number(counterpartId) === Number(lawanAktif)) {
+        const chatArea = document.getElementById('chat-area');
+        if (chatArea) {
+          chatArea.innerHTML = '<div class="empty-chat">Percakapan telah dihapus</div>';
+        }
+        lawanAktif = null;
+        chatThreadAktif = null;
+        if (isMobileView()) {
+          showChatList();
+        }
+      }
+
+      await loadDaftarChat();
+      showStatusMessage('✓ Percakapan dihapus dari daftar chat', 'success');
+    } catch (err) {
+      console.error('Error hapusChatPercakapan:', err);
+      showStatusMessage('❌ Gagal menghapus percakapan: ' + err.message, 'error');
+    }
   }
 
   // Modal user baru

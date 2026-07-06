@@ -100,6 +100,16 @@ db.exec(`
     FOREIGN KEY (penjual_id) REFERENCES users(id)
   );
 
+  CREATE TABLE IF NOT EXISTS chat_hidden (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    chat_id INTEGER DEFAULT NULL,
+    counterpart_id INTEGER DEFAULT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, chat_id, counterpart_id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  );
+
   CREATE TABLE IF NOT EXISTS wishlists (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER NOT NULL,

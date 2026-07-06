@@ -10,6 +10,7 @@ const {
   getRiwayatChat,
   getRiwayatChatByThread,
   kirimPesan,
+  hideChat,
   getDaftarUser
 } = require('../controllers/messageController');
 
@@ -40,6 +41,7 @@ router.get('/daftar', authUser, getDaftarChat);
 router.get('/threads', authUser, getDaftarChatThreads);
 router.get('/thread/:chatId', authUser, getRiwayatChatByThread);
 router.get('/users', authUser, getDaftarUser);
+router.delete('/hide', authUser, hideChat);
 router.get('/:lawanId', authUser, getRiwayatChat);
 router.post('/upload', authUser, (req, res, next) => {
   upload.single('image')(req, res, (err) => {
