@@ -442,6 +442,33 @@
       line-height: 1.4;
     }
 
+    .msg-image-link {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .msg-image {
+      display: block;
+      max-width: 220px;
+      width: 100%;
+      max-height: 220px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+      background: #f8fafc;
+    }
+
+    .msg-sender-name {
+      font-size: 12px;
+      color: #475569;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .msg-row { display: flex; width: 100%; }
+    .msg-row.admin { justify-content: flex-end; }
+    .msg-body { max-width: 70%; display: flex; flex-direction: column; }
+    .msg-body.admin { align-items: flex-end; }
+
     .msg-lawan { background: #f1f5f9; color: #1e293b; }
     .msg-saya { background: #2563eb; color: white; align-self: flex-end; }
 
@@ -837,18 +864,7 @@
           if (uniqueMessages.length === 0) {
             messagesHtml = '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:20px">Belum ada pesan</div>';
           } else {
-            messagesHtml = uniqueMessages.map(p => {
-              const dariku = p.sender_id === adminId;
-              const waktu = new Date(p.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-              return `
-                <div style="display:flex;${dariku ? 'justify-content:flex-end' : ''}">
-                  <div class="msg-bubble-admin ${dariku ? 'msg-saya' : 'msg-lawan'}">
-                    ${escapeHtml(p.isi)}
-                    <div style="font-size:10px;opacity:0.7;margin-top:2px">${waktu}</div>
-                  </div>
-                </div>
-              `;
-            }).join('');
+            messagesHtml = uniqueMessages.map(p => renderAdminMessageHtml(p, { adminId, fallbackName: 'Pengguna' })).join('');
           }
 
           // Render ulang header & messages area but keep input if active
@@ -1099,18 +1115,10 @@
     if (uniqueMessages.length === 0) {
       messagesHtml = '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:20px">Belum ada pesan</div>';
     } else {
-      messagesHtml = uniqueMessages.map(p => {
-        const dariku = p.sender_id === adminId;
-        const waktu = new Date(p.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-        return `
-          <div style="display:flex;${dariku ? 'justify-content:flex-end' : ''}">
-            <div class="msg-bubble-admin ${dariku ? 'msg-saya' : 'msg-lawan'}">
-              ${escapeHtml(p.isi)}
-              <div style="font-size:10px;opacity:0.7;margin-top:2px">${waktu}</div>
-            </div>
-          </div>
-        `;
-      }).join('');
+      messagesHtml = uniqueMessages.map(p => renderAdminMessageHtml(p, {
+        adminId,
+        fallbackName: p.sender_id === user1Id ? nama1 : nama2
+      })).join('');
     }
 
     detail.innerHTML = `
@@ -1138,18 +1146,29 @@
     const isi = input.value.trim();
     if (!isi || !chatAdminAktif) return;
 
-    await fetch('/api/messages', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ receiver_id: user1Id, chat_id: chatAdminAktif, isi })
-    });
+    try {
+      const res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ receiver_id: user1Id, chat_id: chatAdminAktif, isi })
+      });
 
-    input.value = '';
-    await loadChatAdmin();
-    bukaDetailChatAdmin(chatAdminAktif, chatAdminUser1Name, chatAdminUser2Name, user1Id, user2Id, null);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert('Gagal mengirim pesan: ' + (data.error || 'Terjadi kesalahan'));
+        return;
+      }
+
+      input.value = '';
+      await loadChatAdmin();
+      bukaDetailChatAdmin(chatAdminAktif, chatAdminUser1Name, chatAdminUser2Name, user1Id, user2Id, null);
+    } catch (err) {
+      console.error('Error kirimChatAdminThread:', err);
+      alert('Gagal mengirim pesan: ' + err.message);
+    }
   }
 
   async function openAdminChat(userId, nama) {
@@ -1159,36 +1178,53 @@
     const detail = document.getElementById('chat-detail');
     detail.innerHTML = '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:20px">Memuat chat dengan ' + nama + '...</div>';
 
-    const msgRes = await fetch(`/api/messages/${userId}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    }).then(r => r.json()).catch(() => []);
+    // Cek apakah ada thread antara admin dan user
+    let thread = null;
+    try {
+      const threadRes = await fetch(`/api/chat/between/${adminId}/${userId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      thread = await threadRes.json();
+    } catch (err) {
+      console.warn('Gagal mengecek thread antara admin dan user:', err);
+      thread = null;
+    }
+
+    // Ambil pesan: jika ada thread gunakan pesan berdasarkan thread, else gunakan history general
+    const msgRes = thread && thread.id
+      ? await fetch(`/api/messages/thread/${thread.id}`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()).catch(() => [])
+      : await fetch(`/api/messages/${userId}`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.json()).catch(() => []);
 
     let messagesHtml = '';
     if (msgRes.length === 0) {
       messagesHtml = '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:20px">Belum ada pesan dengan ' + nama + '</div>';
     } else {
-      messagesHtml = msgRes.map(p => {
-        const dariku = p.sender_id === adminId;
-        const waktu = new Date(p.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-        return `
-          <div style="display:flex;${dariku ? 'justify-content:flex-end' : ''}">
-            <div class="msg-bubble-admin ${dariku ? 'msg-saya' : 'msg-lawan'}">
-              ${escapeHtml(p.isi)}
-              <div style="font-size:10px;opacity:0.7;margin-top:2px">${waktu}</div>
-            </div>
-          </div>
-        `;
-      }).join('');
+      messagesHtml = msgRes.map(p => renderAdminMessageHtml(p, {
+        adminId,
+        fallbackName: nama,
+        compact: true
+      })).join('');
     }
 
-    detail.innerHTML = `
-      <div class="chat-detail-header">💬 Admin ↔ ${escapeHtml(nama)}</div>
-      <div class="chat-detail-messages" id="admin-messages">${messagesHtml}</div>
-      <div class="chat-detail-input">
-        <textarea id="input-chat-admin" placeholder="Ketik pesan..." rows="1"></textarea>
-        <button onclick="kirimChatToUser(${userId})">Kirim</button>
-      </div>
-    `;
+    // Jika thread ditemukan dan status bukan active, tampilkan pesan tertutup
+    if (thread && thread.status && thread.status !== 'active') {
+      detail.innerHTML = `
+        <div class="chat-detail-header">💬 Admin ↔ ${escapeHtml(nama)}</div>
+        <div class="chat-detail-messages" id="admin-messages">${messagesHtml}</div>
+        <div style="text-align:center;padding:10px;background:#f0fdf4;border-radius:6px;color:#16a34a;font-size:12px">
+          Chat telah ditutup (Status: ${thread.status === 'completed' ? 'Selesai' : 'Tidak Tertarik'})
+        </div>
+      `;
+    } else {
+      detail.innerHTML = `
+        <div class="chat-detail-header">💬 Admin ↔ ${escapeHtml(nama)}</div>
+        <div class="chat-detail-messages" id="admin-messages">${messagesHtml}</div>
+        <div class="chat-detail-input">
+          <textarea id="input-chat-admin" placeholder="Ketik pesan..." rows="1"></textarea>
+          <button onclick="kirimChatToUser(${userId})">Kirim</button>
+        </div>
+      `;
+    }
 
     scrollBawahAdmin();
   }
@@ -1199,18 +1235,28 @@
 
     const isi = input.value.trim();
     if (!isi) return;
+    try {
+      const res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ receiver_id: userId, isi })
+      });
 
-    await fetch('/api/messages', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ receiver_id: userId, isi })
-    });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert('Gagal mengirim pesan: ' + (data.error || 'Terjadi kesalahan'));
+        return;
+      }
 
-    input.value = '';
-    openAdminChat(userId, document.querySelector('.chat-detail-header')?.textContent?.replace('💬 Admin ↔ ', '') || 'User');
+      input.value = '';
+      openAdminChat(userId, document.querySelector('.chat-detail-header')?.textContent?.replace('💬 Admin ↔ ', '') || 'User');
+    } catch (err) {
+      console.error('Error kirimChatToUser:', err);
+      alert('Gagal mengirim pesan: ' + err.message);
+    }
   }
 
   async function toggleBanUser(userId) {
@@ -1238,7 +1284,47 @@
   }
 
   function escapeHtml(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function escapeAttr(str) {
+    return String(str ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function renderAdminMessageHtml(p, { adminId, fallbackName, compact = false } = {}) {
+    const dariku = p.sender_id === adminId;
+    const waktu = new Date(p.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+    const senderName = escapeHtml(p.nama_sender || fallbackName || 'Pengguna');
+    const attachmentHtml = p.attachment_type === 'image' && p.attachment_url
+      ? `<a class="msg-image-link" href="${escapeAttr(p.attachment_url)}" target="_blank" rel="noopener"><img class="msg-image" src="${escapeAttr(p.attachment_url)}" alt="Gambar chat"></a>`
+      : '';
+    const textHtml = p.isi ? `<div class="msg-text">${escapeHtml(p.isi)}</div>` : '';
+
+    if (compact) {
+      return `
+        <div style="display:flex;${dariku ? 'justify-content:flex-end' : ''}">
+          <div style="max-width:100%;">
+            ${dariku ? '' : `<div class="msg-sender-name">${senderName}</div>`}
+            <div class="msg-bubble-admin ${dariku ? 'msg-saya' : 'msg-lawan'}">
+              ${attachmentHtml}${textHtml}
+              <div style="font-size:10px;opacity:0.7;margin-top:2px">${waktu}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="msg-row ${dariku ? 'admin' : ''}">
+        <div class="msg-body ${dariku ? 'admin' : ''}">
+          ${dariku ? '' : `<div class="msg-sender-name">${senderName}</div>`}
+          <div class="msg-bubble-admin ${dariku ? 'msg-saya' : 'msg-lawan'}">
+            ${attachmentHtml}${textHtml}
+            <div style="font-size:10px;opacity:0.7;margin-top:2px">${waktu}</div>
+          </div>
+        </div>
+      </div>
+    `;
   }
 
   // Approve post

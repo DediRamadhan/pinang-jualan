@@ -4,6 +4,7 @@ const { authUser, authAdmin } = require('../middleware/auth');
 const {
   getOrCreateChatThread, kirimNegosiasi, approveNegosiasi, rejectNegosiasi,
   getNegotiasi, closeChat, inviteAdmin, kirimRating, getChatInfo
+  , getThreadBetweenUsers
 } = require('../controllers/chatController');
 
 router.post('/thread', authUser, getOrCreateChatThread);
@@ -15,6 +16,9 @@ router.put('/close', authUser, closeChat);
 router.post('/invite-admin', authUser, inviteAdmin);
 router.post('/rating', authUser, kirimRating);
 router.get('/:chat_id/info', authUser, getChatInfo);
+
+// Cari thread antara dua user
+router.get('/between/:userA/:userB', authUser, getThreadBetweenUsers);
 
 // Admin threads
 router.get('/admin/threads', authAdmin, async (req, res) => {

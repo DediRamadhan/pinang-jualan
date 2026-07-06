@@ -251,3 +251,20 @@ module.exports = {
   getOrCreateChatThread, kirimNegosiasi, approveNegosiasi, rejectNegosiasi,
   getNegotiasi, closeChat, inviteAdmin, kirimRating, getChatInfo, getChatThreadsForAdmin
 };
+
+// Cari thread antara dua user (terbaru)
+function getThreadBetweenUsers(req, res) {
+  const a = parseInt(req.params.userA, 10);
+  const b = parseInt(req.params.userB, 10);
+  if (!a || !b) return res.status(400).json({ error: 'Parameter user tidak valid' });
+
+  const thread = db.prepare(`
+    SELECT * FROM chat_threads
+    WHERE (user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?)
+    ORDER BY created_at DESC LIMIT 1
+  `).get(a, b, b, a);
+
+  res.json(thread || null);
+}
+
+module.exports.getThreadBetweenUsers = getThreadBetweenUsers;

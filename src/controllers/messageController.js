@@ -198,6 +198,17 @@ function kirimPesan(req, res) {
   }
 
   if (!chosenChatId && actualReceiverId) {
+    // If there exists any thread between these users that is NOT active, block sending
+    const anyThread = db.prepare(`
+      SELECT * FROM chat_threads
+      WHERE ((user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?))
+      ORDER BY created_at DESC LIMIT 1
+    `).get(sender_id, actualReceiverId, actualReceiverId, sender_id);
+
+    if (anyThread && anyThread.status && anyThread.status !== 'active') {
+      return res.status(400).json({ error: 'Chat telah ditutup dan tidak dapat mengirim pesan.' });
+    }
+
     const existingThread = findActiveChatThread(sender_id, actualReceiverId);
     if (existingThread) {
       chosenChatId = existingThread.id;
