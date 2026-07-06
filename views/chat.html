@@ -2073,6 +2073,7 @@
       const counterpartRole = d.counterpart_role || d.role;
       const threadId = d.chat_id || d.thread_id || null;
       const active = counterpartId === lawanAktif;
+      const canDelete = (d.status || 'active') !== 'active';
 
       const item = document.createElement('div');
       item.className = `chat-item${active ? ' active' : ''}`;
@@ -2095,7 +2096,7 @@
           </div>
         </div>
         <div class="chat-item-actions">
-          <button class="btn-delete-chat" type="button" title="Hapus percakapan" onclick="event.stopPropagation(); hapusChatPercakapan(${threadId || 0}, ${counterpartId})">🗑️</button>
+          ${canDelete ? `<button class="btn-delete-chat" type="button" title="Hapus percakapan" onclick="event.stopPropagation(); hapusChatPercakapan(${threadId || 0}, ${counterpartId})">🗑️</button>` : `<button class="btn-delete-chat" type="button" title="Chat harus diakhiri dulu" onclick="event.stopPropagation(); showStatusMessage('Chat belum diakhiri. Selesaikan chat dulu sebelum menghapus riwayat.', 'info')">🔒</button>`}
         </div>
       `;
 

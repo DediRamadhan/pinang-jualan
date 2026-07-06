@@ -276,29 +276,41 @@ function hideChat(req, res) {
     return res.status(400).json({ error: 'chat_id atau counterpart_id wajib diisi' });
   }
 
-  let resolvedCounterpartId = counterpartId;
+  let thread = null;
   if (chatId) {
-    const thread = db.prepare(`
+    thread = db.prepare(`
       SELECT * FROM chat_threads
       WHERE id = ? AND (user1_id = ? OR user2_id = ?)
     `).get(chatId, userId, userId);
-
-    if (!thread) {
-      return res.status(404).json({ error: 'Percakapan tidak ditemukan' });
-    }
-
-    resolvedCounterpartId = thread.user1_id === userId ? thread.user2_id : thread.user1_id;
+  } else {
+    thread = db.prepare(`
+      SELECT * FROM chat_threads
+      WHERE ((user1_id = ? AND user2_id = ?) OR (user1_id = ? AND user2_id = ?))
+      ORDER BY created_at DESC
+      LIMIT 1
+    `).get(userId, counterpartId, counterpartId, userId);
   }
 
+  if (!thread) {
+    return res.status(404).json({ error: 'Percakapan tidak ditemukan' });
+  }
+
+  if (thread.status === 'active') {
+    return res.status(400).json({
+      error: 'Chat belum diakhiri. Selesaikan chat terlebih dahulu sebelum menghapus riwayat.'
+    });
+  }
+
+  const resolvedCounterpartId = thread.user1_id === userId ? thread.user2_id : thread.user1_id;
   const hiddenEntries = getHiddenChatEntries(userId);
-  if (isConversationHidden(hiddenEntries, chatId, resolvedCounterpartId)) {
+  if (isConversationHidden(hiddenEntries, thread.id, resolvedCounterpartId)) {
     return res.json({ message: 'Percakapan sudah disembunyikan' });
   }
 
   db.prepare(`
     INSERT INTO chat_hidden (user_id, chat_id, counterpart_id)
     VALUES (?, ?, ?)
-  `).run(userId, chatId, resolvedCounterpartId);
+  `).run(userId, thread.id, resolvedCounterpartId);
 
   res.json({ message: 'Percakapan disembunyikan' });
 }
