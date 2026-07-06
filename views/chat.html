@@ -302,7 +302,7 @@
     min-width: 56px;
     white-space: normal;
     word-break: break-word;
-    overflow-wrap: break-word;
+    overflow-wrap: anywhere;
     line-height: 1.5;
     box-sizing: border-box;
     overflow: hidden;
@@ -560,8 +560,12 @@
     }
 
     .message-text {
-      white-space: pre-wrap;
+      display: inline;
+      white-space: normal;
+      word-break: break-word;
+      overflow-wrap: anywhere;
       line-height: 1.45;
+      max-width: 100%;
     }
 
     /* CHAT CLOSED */
@@ -961,6 +965,10 @@
         max-width: 85%;
         padding: 8px 10px;
         font-size: 12px;
+        display: inline-block;
+        white-space: normal;
+        word-break: break-word;
+        overflow-wrap: break-word;
       }
 
       .bubble-time {
@@ -1332,7 +1340,7 @@
           <div class="input-row">
             <input type="file" id="input-image" accept="image/*" style="display:none" onchange="uploadSelectedImage(event)">
             <button class="btn-attach" type="button" onclick="document.getElementById('input-image').click()">📷</button>
-            <textarea class="chat-input" id="input-pesan" placeholder="Tulis pesan..." rows="1" onkeydown="handleEnter(event)"></textarea>
+            <textarea class="chat-input" id="input-pesan" placeholder="Tulis pesan..." rows="1" wrap="soft" onkeydown="handleEnter(event)"></textarea>
             <button class="btn-kirim" onclick="kirimPesan()">Kirim</button>
           </div>
         </div>
@@ -1734,7 +1742,7 @@
   // Kirim pesan
   async function kirimPesan(attachmentUrl = null, attachmentType = null, customText = null) {
     const input = document.getElementById('input-pesan');
-    const isi = (customText ?? input?.value ?? '').trim();
+    const isi = (customText ?? input?.value ?? '').replace(/\r?\n/g, ' ').trim();
     if ((!isi && !attachmentUrl) || !lawanAktif) return;
 
     // Buat chat thread jika belum ada
