@@ -1148,18 +1148,23 @@
 
   let chatThreadAktif = null;
   let lawanAktif = null;
+  let lawanRoleAktif = null;
   let namaLawanAktif = '';
   let hargaOriginal = 0;
+  let adminNameAktif = null;
+  let adminIdAktif = null;
+  const displayedMessageIds = new Set();
 
   // Terima pesan real-time
   socket.on('new_message', (pesan) => {
-    if (chatThreadAktif && 
-        (pesan.sender_id === lawanAktif || pesan.receiver_id === lawanAktif)) {
-      if (pesan.sender_id !== userId) {
-        tampilkanPesan(pesan);
-        scrollBawah();
-      }
+    const isCurrentThread = chatThreadAktif && pesan.chat_id === chatThreadAktif;
+    const isDirectReply = !chatThreadAktif && ((pesan.sender_id === lawanAktif && pesan.receiver_id === userId) || (pesan.sender_id === userId && pesan.receiver_id === lawanAktif));
+
+    if (isCurrentThread || isDirectReply) {
+      tampilkanPesan(pesan);
+      scrollBawah();
     }
+
     loadDaftarChat();
   });
 
@@ -1168,12 +1173,22 @@
     console.log('Negotiation received:', data);
     if (chatThreadAktif === data.chat_id) {
       await loadNegotiasi();
-      // Notify user
       const audio = new Audio();
       audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj==';
       audio.play().catch(() => {});
       showStatusMessage('⚠️ Ada penawaran harga baru dari ' + namaLawanAktif, 'info');
     }
+  });
+
+  socket.on('chat_admin_invited', async (data) => {
+    console.log('Admin invited event:', data);
+    if (chatThreadAktif === data.chat_id) {
+      adminNameAktif = data.admin_name;
+      showStatusMessage('👤 Admin telah bergabung dalam chat ini', 'success');
+      await loadRiwayatChat();
+      renderChatHeader();
+    }
+    await loadDaftarChat();
   });
 
   // Load daftar chat
@@ -1245,6 +1260,7 @@
       console.log('bukaChat dipanggil:', idLawan, nama, role, threadId);
       
       lawanAktif = idLawan;
+      lawanRoleAktif = role;
       namaLawanAktif = nama;
 
       const chatArea = document.getElementById('chat-area');
@@ -1294,6 +1310,8 @@
           if (info.chat) {
             isPembeli = info.chat.user1_id === userId;
             postInfo = info.chat;
+            adminNameAktif = info.chat.admin_name || null;
+            adminIdAktif = info.chat.admin_id || null;
 
             if (info.chat.status !== 'active') {
               chatArea.innerHTML = `
@@ -1314,15 +1332,15 @@
       console.log('Rendering chat area untuk:', nama);
       chatArea.innerHTML = `
         <div class="chat-header">
-          <div class="avatar ${role === 'admin' ? 'avatar-admin' : 'avatar-user'}" style="width:36px;height:36px;font-size:13px">
+          <div class="avatar ${lawanRoleAktif === 'admin' ? 'avatar-admin' : 'avatar-user'}" style="width:36px;height:36px;font-size:13px">
             ${escapeHtml(nama.charAt(0).toUpperCase())}
           </div>
           <div>
-            <div class="chat-header-nama">${escapeHtml(nama)} ${role === 'admin' ? '👑 Admin' : ''}</div>
-            <div class="chat-header-status">● Online</div>
+            <div class="chat-header-nama">${escapeHtml(nama)} ${lawanRoleAktif === 'admin' ? '👑 Admin' : ''}</div>
+            <div class="chat-header-status">${adminNameAktif ? `👤 Admin: ${escapeHtml(adminNameAktif)} hadir` : '● Online'}</div>
           </div>
           <div class="chat-header-actions">
-            ${role !== 'admin' ? `<button class="btn-header btn-rekber" onclick="inviteAdmin()">🛡️ Invite Admin (Rekber)</button>` : ''}
+            ${lawanRoleAktif !== 'admin' ? (adminNameAktif ? '<button class="btn-header" style="background:#f8fafc;color:#64748b;cursor:default">Admin Bergabung</button>' : `<button class="btn-header btn-rekber" onclick="inviteAdmin()">🛡️ Invite Admin (Rekber)</button>`) : ''}
           </div>
         </div>
         <div id="status-message" class="status-message"></div>
@@ -1423,6 +1441,7 @@
         wrap.innerHTML = '<div style="text-align:center;color:#94a3b8;font-size:13px;padding:20px">Belum ada pesan. Mulai percakapan!</div>';
       } else {
         wrap.innerHTML = '';
+        displayedMessageIds.clear();
         pesan.forEach(p => tampilkanPesan(p));
       }
     } catch (err) {
@@ -1435,13 +1454,19 @@
   }
 
   function tampilkanPesan(pesan) {
-  const wrap = document.getElementById('messages-wrap');
-  if (!wrap) return;
+    if (!pesan || !pesan.id) return;
+    const messageId = String(pesan.id);
+    if (displayedMessageIds.has(messageId)) return;
+    displayedMessageIds.add(messageId);
 
-  const dariku = pesan.sender_id === userId;
-  const waktu = new Date(pesan.created_at).toLocaleTimeString('id-ID', {
-    hour: '2-digit', minute: '2-digit'
-  });
+    const wrap = document.getElementById('messages-wrap');
+    if (!wrap) return;
+
+    const dariku = pesan.sender_id === userId;
+    const isAdminSender = adminIdAktif && pesan.sender_id === adminIdAktif;
+    const waktu = new Date(pesan.created_at).toLocaleTimeString('id-ID', {
+      hour: '2-digit', minute: '2-digit'
+    });
 
   const attachmentHtml = pesan.attachment_type === 'image' && pesan.attachment_url
     ? `<a class="message-image-link" href="${escapeAttr(pesan.attachment_url)}" target="_blank" rel="noopener"><img class="message-image" src="${escapeAttr(pesan.attachment_url)}" alt="Gambar chat"></a>`
@@ -1451,11 +1476,20 @@
     : '';
 
   const div = document.createElement('div');
-  div.className = `bubble-wrap ${dariku ? 'saya' : ''}`; 
-  
+  div.className = `bubble-wrap ${dariku ? 'saya' : ''}`;
+
+  // Jika pengirim adalah admin, gunakan styling avatar/admin label
+  const avatarHtml = (!dariku) ? (isAdminSender
+    ? `<div class="avatar avatar-admin" style="width:28px;height:28px;font-size:11px">A</div>`
+    : `<div class="avatar avatar-user" style="width:28px;height:28px;font-size:11px">${pesan.nama_sender.charAt(0)}</div>`)
+    : '';
+
+  const adminLabelHtml = (!dariku && isAdminSender) ? `<div style="font-size:11px;color:#7c3aed;font-weight:700;margin-bottom:4px">Admin</div>` : '';
+
   div.innerHTML = `
-      ${!dariku ? `<div class="avatar avatar-user" style="width:28px;height:28px;font-size:11px">${pesan.nama_sender.charAt(0)}</div>` : ''}
+      ${avatarHtml}
       <div>
+          ${adminLabelHtml}
           <div class="bubble ${dariku ? 'bubble-saya' : 'bubble-lawan'}">${attachmentHtml}${textHtml}</div>
           <div class="bubble-time" style="font-size:10px; color:#999; text-align: ${dariku ? 'right' : 'left'}">${waktu}</div>
       </div>
@@ -1607,11 +1641,6 @@
 
     if (msgRes.ok) {
       const pesan = await msgRes.json();
-      socket.emit('private_message', {
-        ...pesan,
-        sender_id: userId,
-        receiver_id: lawanAktif
-      });
       tampilkanPesan(pesan);
       scrollBawah();
     }
@@ -1654,11 +1683,6 @@
 
     if (msgRes.ok) {
       const pesan = await msgRes.json();
-      socket.emit('private_message', {
-        ...pesan,
-        sender_id: userId,
-        receiver_id: lawanAktif
-      });
       tampilkanPesan(pesan);
       scrollBawah();
     }
@@ -1789,12 +1813,6 @@
       }
 
       const pesan = await res.json();
-      socket.emit('private_message', {
-        ...pesan,
-        sender_id: userId,
-        receiver_id: lawanAktif
-      });
-
       tampilkanPesan(pesan);
       scrollBawah();
       await loadDaftarChat();
@@ -1940,6 +1958,23 @@
               .replace(/'/g,'&#39;')
               .replace(/</g,'&lt;')
               .replace(/>/g,'&gt;');
+  }
+
+  function renderChatHeader() {
+    const header = document.querySelector('.chat-header');
+    if (!header) return;
+    header.innerHTML = `
+      <div class="avatar ${lawanRoleAktif === 'admin' ? 'avatar-admin' : 'avatar-user'}" style="width:36px;height:36px;font-size:13px">
+        ${escapeHtml(namaLawanAktif.charAt(0).toUpperCase())}
+      </div>
+      <div>
+        <div class="chat-header-nama">${escapeHtml(namaLawanAktif)} ${lawanRoleAktif === 'admin' ? '👑 Admin' : ''}</div>
+        <div class="chat-header-status">${adminNameAktif ? `👤 Admin: ${escapeHtml(adminNameAktif)} hadir` : '● Online'}</div>
+      </div>
+      <div class="chat-header-actions">
+        ${lawanRoleAktif !== 'admin' ? (adminNameAktif ? '<button class="btn-header" style="background:#f8fafc;color:#64748b;cursor:default">Admin Bergabung</button>' : `<button class="btn-header btn-rekber" onclick="inviteAdmin()">🛡️ Invite Admin (Rekber)</button>`) : ''}
+      </div>
+    `;
   }
 
   let statusTimeout = null;

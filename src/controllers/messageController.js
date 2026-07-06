@@ -138,8 +138,8 @@ function getRiwayatChatByThread(req, res) {
 
   const thread = db.prepare(`
     SELECT * FROM chat_threads
-    WHERE id = ? AND (user1_id = ? OR user2_id = ?)
-  `).get(chatId, userId, userId);
+    WHERE id = ? AND (user1_id = ? OR user2_id = ? OR admin_id = ?)
+  `).get(chatId, userId, userId, userId);
 
   if (!thread) {
     return res.status(404).json({ error: 'Chat tidak ditemukan' });
@@ -180,16 +180,19 @@ function kirimPesan(req, res) {
   if (chosenChatId) {
     const thread = db.prepare(`
       SELECT * FROM chat_threads
-      WHERE id = ? AND (user1_id = ? OR user2_id = ?)
-    `).get(chosenChatId, sender_id, sender_id);
+      WHERE id = ? AND (user1_id = ? OR user2_id = ? OR admin_id = ?)
+    `).get(chosenChatId, sender_id, sender_id, sender_id);
 
     if (!thread) {
       return res.status(400).json({ error: 'Chat thread tidak valid' });
     }
 
     if (!actualReceiverId) {
-      actualReceiverId = thread.user1_id === sender_id ? thread.user2_id : thread.user1_id;
-    } else if (![thread.user1_id, thread.user2_id].includes(actualReceiverId)) {
+      if (thread.user1_id === sender_id) actualReceiverId = thread.user2_id;
+      else if (thread.user2_id === sender_id) actualReceiverId = thread.user1_id;
+      else if (thread.admin_id === sender_id) actualReceiverId = thread.user1_id;
+      else actualReceiverId = thread.user2_id;
+    } else if (![thread.user1_id, thread.user2_id].includes(actualReceiverId) && actualReceiverId !== thread.admin_id) {
       return res.status(400).json({ error: 'Penerima tidak terhubung di chat thread ini' });
     }
   }
@@ -212,6 +215,21 @@ function kirimPesan(req, res) {
     JOIN users u ON m.sender_id = u.id
     WHERE m.id = ?
   `).get(result.lastInsertRowid);
+
+  const io = req.app.get('io');
+  if (io && chosenChatId) {
+    const thread = db.prepare('SELECT * FROM chat_threads WHERE id = ?').get(chosenChatId);
+    if (thread) {
+      const recipients = new Set([thread.user1_id, thread.user2_id]);
+      if (thread.admin_id) recipients.add(thread.admin_id);
+      recipients.delete(sender_id);
+      recipients.forEach((uid) => {
+        io.to(`user_${uid}`).emit('new_message', pesan);
+      });
+    }
+  } else if (io && actualReceiverId) {
+    io.to(`user_${actualReceiverId}`).emit('new_message', pesan);
+  }
 
   res.json(pesan);
 }

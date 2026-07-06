@@ -409,6 +409,10 @@
     .chat-detail {
       display: flex;
       flex-direction: column;
+      /* ensure inner content stays within rounded container */
+      padding: 12px;
+      box-sizing: border-box;
+      overflow: hidden;
     }
 
     .chat-detail-header {
@@ -426,6 +430,8 @@
       flex-direction: column;
       gap: 8px;
       margin-bottom: 12px;
+      padding: 8px; /* inner padding so bubbles don't touch edges */
+      box-sizing: border-box;
     }
 
     .msg-bubble-admin {
@@ -593,6 +599,7 @@
 <body>
 <script src="/js/auth.js"></script>
 <script>cekAdmin();</script>  
+<script src="/socket.io/socket.io.js"></script>
 
 
 <!-- SIDEBAR -->
@@ -793,6 +800,84 @@
 
   let rejectIdAktif = null;
 
+  // Socket.io untuk real-time (terima pesan baru)
+  const socket = io();
+  socket.emit('join', adminId);
+
+  socket.on('new_message', async (pesan) => {
+    try {
+      console.log('Socket new_message (admin):', pesan);
+      // Refresh daftar thread/admin list
+      await loadChatAdmin();
+
+      // Jika admin sedang membuka thread yang sama, reload detail
+      if (pesan && pesan.chat_id && chatAdminAktif && pesan.chat_id === chatAdminAktif) {
+        // Ambil info thread dan pesan lalu render ulang bagian detail
+        try {
+          const infoRes = await fetch(`/api/chat/${chatAdminAktif}/info`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const info = await infoRes.json();
+
+          const msgRes = await fetch(`/api/messages/thread/${chatAdminAktif}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          }).then(r => r.json()).catch(() => []);
+
+          const uniqueMessages = [];
+          const seenAdminMessageIds = new Set();
+          for (const msg of msgRes) {
+            const id = msg?.id ? String(msg.id) : null;
+            if (!id || seenAdminMessageIds.has(id)) continue;
+            seenAdminMessageIds.add(id);
+            uniqueMessages.push(msg);
+          }
+
+          const detail = document.getElementById('chat-detail');
+          let messagesHtml = '';
+          if (uniqueMessages.length === 0) {
+            messagesHtml = '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:20px">Belum ada pesan</div>';
+          } else {
+            messagesHtml = uniqueMessages.map(p => {
+              const dariku = p.sender_id === adminId;
+              const waktu = new Date(p.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+              return `
+                <div style="display:flex;${dariku ? 'justify-content:flex-end' : ''}">
+                  <div class="msg-bubble-admin ${dariku ? 'msg-saya' : 'msg-lawan'}">
+                    ${escapeHtml(p.isi)}
+                    <div style="font-size:10px;opacity:0.7;margin-top:2px">${waktu}</div>
+                  </div>
+                </div>
+              `;
+            }).join('');
+          }
+
+          // Render ulang header & messages area but keep input if active
+          const infoChat = info.chat || {};
+          detail.innerHTML = `
+            <div class="chat-detail-header">💬 ${escapeHtml(infoChat.user1_id ? (infoChat.user1_nama || '') : '')} ↔ ${escapeHtml(infoChat.user2_id ? (infoChat.post_judul || '') : '')}</div>
+            <div class="chat-detail-messages" id="admin-messages">${messagesHtml}</div>
+            ${infoChat.status === 'active' ? `
+              <div class="chat-detail-input">
+                <textarea id="input-chat-admin" placeholder="Ketik pesan..." rows="1"></textarea>
+                <button onclick="kirimChatAdminThread(${infoChat.user1_id || 0}, ${infoChat.user2_id || 0})">Kirim</button>
+              </div>
+            ` : `
+              <div style="text-align:center;padding:10px;background:#f0fdf4;border-radius:6px;color:#16a34a;font-size:12px">
+                Chat telah ditutup (Status: ${infoChat.status === 'completed' ? 'Selesai' : 'Tidak Tertarik'})
+              </div>
+            `}
+          `;
+
+          scrollBawahAdmin();
+        } catch (err) {
+          console.warn('Gagal reload detail chat di admin on new_message:', err);
+        }
+      }
+    } catch (err) {
+      console.error('Error handling socket new_message in admin:', err);
+    }
+  });
+
   // Navigasi section
   function gotoSection(nama) {
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -939,6 +1024,8 @@
   }
 
   let chatAdminAktif = null;
+  let chatAdminUser1Name = '';
+  let chatAdminUser2Name = '';
 
   async function loadChatAdmin() {
     // Ambil chat threads yang admin di-invite
@@ -954,20 +1041,37 @@
     }
 
     container.innerHTML = threads.map(t => `
-      <div class="chat-item-admin" onclick="bukaDetailChatAdmin(${t.id}, '${t.user1_nama}', '${t.user2_nama}', ${t.user1_id}, ${t.user2_id})">
+      <div class="chat-item-admin" data-thread-id="${t.id}" data-user1-id="${t.user1_id}" data-user2-id="${t.user2_id}" data-name1="${t.user1_nama}" data-name2="${t.user2_nama}">
         <strong style="display:block;font-size:12px">${t.user1_nama} ↔ ${t.user2_nama}</strong>
         <div style="font-size:11px;color:#64748b;margin-top:2px">${t.pesan_terakhir?.substring(0,30) || 'Belum ada pesan'}...</div>
         <div style="font-size:10px;color:#94a3b8;margin-top:3px">Status: ${t.status === 'active' ? '🟢 Aktif' : '🔴 Ditutup'}</div>
       </div>
     `).join('');
+
+    document.querySelectorAll('.chat-item-admin').forEach(el => {
+      el.addEventListener('click', () => {
+        const threadId = parseInt(el.dataset.threadId, 10);
+        const user1Id = parseInt(el.dataset.user1Id, 10);
+        const user2Id = parseInt(el.dataset.user2Id, 10);
+        const name1 = el.dataset.name1;
+        const name2 = el.dataset.name2;
+        chatAdminUser1Name = name1;
+        chatAdminUser2Name = name2;
+        bukaDetailChatAdmin(threadId, name1, name2, user1Id, user2Id, el);
+      });
+    });
   }
 
-  async function bukaDetailChatAdmin(threadId, nama1, nama2, user1Id, user2Id) {
+  async function bukaDetailChatAdmin(threadId, nama1, nama2, user1Id, user2Id, targetElement) {
     chatAdminAktif = threadId;
     
     // Update active
     document.querySelectorAll('.chat-item-admin').forEach(el => el.classList.remove('active'));
-    event.currentTarget.classList.add('active');
+    if (targetElement?.classList) {
+      targetElement.classList.add('active');
+    } else if (targetElement?.currentTarget?.classList) {
+      targetElement.currentTarget.classList.add('active');
+    }
 
     // Ambil info thread
     const infoRes = await fetch(`/api/chat/${threadId}/info`, {
@@ -975,18 +1079,27 @@
     });
     const info = await infoRes.json();
 
-    // Ambil pesan dari user1 ke user2
-    const msgRes = await fetch(`/api/messages/${user2Id}`, {
+    // Ambil pesan thread yang sama untuk kedua user
+    const msgRes = await fetch(`/api/messages/thread/${threadId}`, {
       headers: { Authorization: `Bearer ${token}` }
     }).then(r => r.json()).catch(() => []);
     
+    const uniqueMessages = [];
+    const seenAdminMessageIds = new Set();
+    for (const msg of msgRes) {
+      const id = msg?.id ? String(msg.id) : null;
+      if (!id || seenAdminMessageIds.has(id)) continue;
+      seenAdminMessageIds.add(id);
+      uniqueMessages.push(msg);
+    }
+
     const detail = document.getElementById('chat-detail');
     let messagesHtml = '';
     
-    if (msgRes.length === 0) {
+    if (uniqueMessages.length === 0) {
       messagesHtml = '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:20px">Belum ada pesan</div>';
     } else {
-      messagesHtml = msgRes.map(p => {
+      messagesHtml = uniqueMessages.map(p => {
         const dariku = p.sender_id === adminId;
         const waktu = new Date(p.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
         return `
@@ -1023,7 +1136,7 @@
     if (!input) return;
     
     const isi = input.value.trim();
-    if (!isi) return;
+    if (!isi || !chatAdminAktif) return;
 
     await fetch('/api/messages', {
       method: 'POST',
@@ -1031,23 +1144,12 @@
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ receiver_id: user1Id, isi })
-    });
-
-    await fetch('/api/messages', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ receiver_id: user2Id, isi })
+      body: JSON.stringify({ receiver_id: user1Id, chat_id: chatAdminAktif, isi })
     });
 
     input.value = '';
-    loadChatAdmin();
-    if (chatAdminAktif) {
-      bukaDetailChatAdmin(chatAdminAktif, '', '', user1Id, user2Id);
-    }
+    await loadChatAdmin();
+    bukaDetailChatAdmin(chatAdminAktif, chatAdminUser1Name, chatAdminUser2Name, user1Id, user2Id, null);
   }
 
   async function openAdminChat(userId, nama) {

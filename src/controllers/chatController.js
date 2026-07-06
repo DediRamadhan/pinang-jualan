@@ -125,16 +125,50 @@ function closeChat(req, res) {
 
 // Invite admin ke chat
 function inviteAdmin(req, res) {
-  const { chat_id } = req.body;
+  const chatId = parseInt(req.body.chat_id, 10);
+  if (!chatId) return res.status(400).json({ error: 'chat_id tidak valid' });
 
-  // Ambil admin pertama
-  const admin = db.prepare('SELECT id FROM users WHERE role = ? LIMIT 1').get('admin');
-  if (!admin) return res.status(400).json({ error: 'Admin tidak ditemukan' });
+  const chat = db.prepare('SELECT * FROM chat_threads WHERE id = ?').get(chatId);
+  if (!chat) return res.status(404).json({ error: 'Chat tidak ditemukan' });
 
-  db.prepare(`UPDATE chat_threads SET admin_id = ? WHERE id = ?`)
-    .run(admin.id, chat_id);
+  if (![chat.user1_id, chat.user2_id].includes(req.user.id)) {
+    return res.status(403).json({ error: 'Hanya peserta chat yang dapat mengundang admin' });
+  }
 
-  res.json({ message: 'Admin diundang ke chat', admin_id: admin.id });
+  if (chat.admin_id) {
+    const admin = db.prepare('SELECT id, nama FROM users WHERE id = ?').get(chat.admin_id);
+    return res.json({ message: 'Admin sudah bergabung', admin_id: admin.id, admin_name: admin.nama, chat_id: chatId });
+  }
+
+  const admin = db.prepare('SELECT id, nama FROM users WHERE role = ? LIMIT 1').get('admin');
+  if (!admin) return res.status(404).json({ error: 'Admin tidak ditemukan' });
+
+  db.prepare('UPDATE chat_threads SET admin_id = ? WHERE id = ?').run(admin.id, chatId);
+
+  const systemMessageReceiver = chat.user1_id;
+  db.prepare(`INSERT INTO messages (sender_id, receiver_id, chat_id, isi) VALUES (?, ?, ?, ?)`)
+    .run(admin.id, systemMessageReceiver, chatId, 'Admin telah diundang sebagai rekber ke dalam percakapan ini.');
+
+  db.prepare(`INSERT INTO notifications (user_id, pesan) VALUES (?, ?)`)
+    .run(admin.id, `Anda diundang sebagai admin rekber dalam chat #${chatId}`);
+  db.prepare(`INSERT INTO notifications (user_id, pesan) VALUES (?, ?)`)
+    .run(chat.user1_id, `Admin telah bergabung dalam chat Anda`);
+  if (chat.user2_id !== chat.user1_id) {
+    db.prepare(`INSERT INTO notifications (user_id, pesan) VALUES (?, ?)`)
+      .run(chat.user2_id, `Admin telah bergabung dalam chat Anda`);
+  }
+
+  const io = req.app.get('io');
+  if (io) {
+    const recipients = new Set([chat.user1_id, chat.user2_id, admin.id]);
+    recipients.forEach((uid) => io.to(`user_${uid}`).emit('chat_admin_invited', {
+      chat_id: chatId,
+      admin_id: admin.id,
+      admin_name: admin.nama
+    }));
+  }
+
+  res.json({ message: 'Admin diundang ke chat', admin_id: admin.id, admin_name: admin.nama, chat_id: chatId });
 }
 
 // Ambil chat threads untuk admin
@@ -199,9 +233,10 @@ function getChatInfo(req, res) {
   const { chat_id } = req.params;
 
   const chat = db.prepare(`
-    SELECT ct.*, p.harga as harga_original, p.judul as post_judul
+    SELECT ct.*, p.harga as harga_original, p.judul as post_judul, u_admin.nama as admin_name
     FROM chat_threads ct
     LEFT JOIN posts p ON ct.post_id = p.id
+    LEFT JOIN users u_admin ON ct.admin_id = u_admin.id
     WHERE ct.id = ?
   `).get(chat_id);
 

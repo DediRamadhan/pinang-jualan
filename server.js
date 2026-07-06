@@ -30,15 +30,26 @@ io.on('connection', (socket) => {
     socket.join(`user_${userId}`);
   });
 
-  socket.on('private_message', (data) => {
-  // Kirim ke penerima
-  io.to(`user_${data.receiver_id}`).emit('new_message', data);
-  // Kirim balik ke pengirim juga
-  io.to(`user_${data.sender_id}`).emit('new_message', data);
-});
+  socket.on('private_message', async (data) => {
+    if (data.chat_id) {
+      const thread = db.prepare('SELECT * FROM chat_threads WHERE id = ?').get(data.chat_id);
+      if (thread) {
+        const recipients = new Set([thread.user1_id, thread.user2_id]);
+        if (thread.admin_id) recipients.add(thread.admin_id);
+        recipients.delete(data.sender_id);
+        recipients.forEach((uid) => {
+          io.to(`user_${uid}`).emit('new_message', data);
+        });
+        return;
+      }
+    }
 
-// Emit negotiation
-socket.on('new_negotiation', (data) => {
+    // Kirim ke penerima
+    io.to(`user_${data.receiver_id}`).emit('new_message', data);
+  });
+
+  // Emit negotiation
+  socket.on('new_negotiation', (data) => {
   console.log('Negotiation event:', data);
   io.to(`user_${data.user2_id}`).emit('negotiation_received', data);
   io.to(`user_${data.user1_id}`).emit('negotiation_received', data);
