@@ -15,8 +15,12 @@ function isConversationHidden(hiddenEntries, chatId, counterpartId) {
   return hiddenEntries.some(entry => {
     const entryChatId = entry.chat_id ? Number(entry.chat_id) : null;
     const entryCounterpartId = entry.counterpart_id ? Number(entry.counterpart_id) : null;
-    return (targetChatId && entryChatId && targetChatId === entryChatId) ||
-      (targetCounterpartId && entryCounterpartId && targetCounterpartId === entryCounterpartId);
+    // Jika entry memiliki `chat_id`, cocokkan berdasarkan `chat_id`.
+    if (entryChatId && targetChatId && entryChatId === targetChatId) return true;
+    // Jika entry tidak memiliki `chat_id` tetapi memiliki `counterpart_id`,
+    // cocokkan berdasarkan `counterpart_id`.
+    if (!entryChatId && entryCounterpartId && targetCounterpartId && entryCounterpartId === targetCounterpartId) return true;
+    return false;
   });
 }
 
@@ -307,10 +311,13 @@ function hideChat(req, res) {
     return res.json({ message: 'Percakapan sudah disembunyikan' });
   }
 
+  // Simpan hanya `chat_id` agar menyembunyikan hanya riwayat percakapan itu saja.
+  // Menyimpan juga `counterpart_id` akan menyembunyikan semua percakapan
+  // dengan lawan yang sama termasuk thread baru yang dibuat nanti.
   db.prepare(`
     INSERT INTO chat_hidden (user_id, chat_id, counterpart_id)
-    VALUES (?, ?, ?)
-  `).run(userId, thread.id, resolvedCounterpartId);
+    VALUES (?, ?, NULL)
+  `).run(userId, thread.id);
 
   res.json({ message: 'Percakapan disembunyikan' });
 }

@@ -17,6 +17,15 @@ function getOrCreateChatThread(req, res) {
     return res.status(400).json({ error: 'Tidak dapat membuat chat dengan diri sendiri' });
   }
 
+  // Jika sebelumnya user menyembunyikan percakapan berdasarkan `counterpart_id`,
+  // hapus entri tersebut agar saat membuat chat baru dari postingan, lawan bicara
+  // kembali muncul di daftar chat.
+  try {
+    db.prepare(`DELETE FROM chat_hidden WHERE user_id = ? AND counterpart_id = ?`).run(user1_id, numericUser2Id);
+  } catch (e) {
+    console.warn('Gagal membersihkan chat_hidden untuk counterpart_id:', e && e.message);
+  }
+
   // Cek apakah sudah ada chat thread untuk post ini
   const existing = db.prepare(`
     SELECT * FROM chat_threads
