@@ -140,11 +140,32 @@ function getDaftarChatThreads(req, res) {
 function getRiwayatChat(req, res) {
   const userId = req.user.id;
   const lawanId = parseInt(req.params.lawanId, 10);
+  // Cari pesan yang akan di-mark-as-read (sebelum update) supaya bisa diketahui id-nya
+  const toMark = db.prepare(`
+    SELECT id FROM messages
+    WHERE receiver_id = ? AND sender_id = ? AND dibaca = 0
+  `).all(userId, lawanId).map(r => r.id);
 
-  db.prepare(`
-    UPDATE messages SET dibaca = 1
-    WHERE receiver_id = ? AND sender_id = ?
-  `).run(userId, lawanId);
+  if (toMark.length) {
+    db.prepare(`
+      UPDATE messages SET dibaca = 1
+      WHERE receiver_id = ? AND sender_id = ? AND dibaca = 0
+    `).run(userId, lawanId);
+
+    // Emit event realtime ke pengirim bahwa pesannya sudah dibaca
+    try {
+      const io = req.app.get('io');
+      if (io) {
+        io.to(`user_${lawanId}`).emit('messages_read', {
+          chat_id: null,
+          reader_id: userId,
+          message_ids: toMark
+        });
+      }
+    } catch (e) {
+      console.warn('Gagal emit messages_read:', e && e.message);
+    }
+  }
 
   const pesan = db.prepare(`
     SELECT m.*, u.nama as nama_sender
@@ -171,10 +192,42 @@ function getRiwayatChatByThread(req, res) {
     return res.status(404).json({ error: 'Chat tidak ditemukan' });
   }
 
-  db.prepare(`
-    UPDATE messages SET dibaca = 1
-    WHERE chat_id = ? AND receiver_id = ?
-  `).run(chatId, userId);
+  // Ambil id pesan yang akan di-mark-as-read per pengirim
+  const unreadRows = db.prepare(`
+    SELECT id, sender_id FROM messages
+    WHERE chat_id = ? AND receiver_id = ? AND dibaca = 0
+  `).all(chatId, userId);
+
+  const idsBySender = {};
+  unreadRows.forEach(r => {
+    if (!idsBySender[r.sender_id]) idsBySender[r.sender_id] = [];
+    idsBySender[r.sender_id].push(r.id);
+  });
+
+  if (unreadRows.length) {
+    db.prepare(`
+      UPDATE messages SET dibaca = 1
+      WHERE chat_id = ? AND receiver_id = ? AND dibaca = 0
+    `).run(chatId, userId);
+
+    // Emit ke setiap pengirim pesan yang pesannya dibaca
+    try {
+      const io = req.app.get('io');
+      if (io) {
+        Object.keys(idsBySender).forEach(sid => {
+          const senderId = parseInt(sid, 10);
+          const messageIds = idsBySender[senderId] || [];
+          io.to(`user_${senderId}`).emit('messages_read', {
+            chat_id: chatId,
+            reader_id: userId,
+            message_ids: messageIds
+          });
+        });
+      }
+    } catch (e) {
+      console.warn('Gagal emit messages_read per sender:', e && e.message);
+    }
+  }
 
   const pesan = db.prepare(`
     SELECT m.*, u.nama as nama_sender

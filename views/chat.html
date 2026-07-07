@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>MarketKita — Chat</title>
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/notifications.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -261,6 +262,32 @@
       display: flex;
       gap: 8px;
     }
+    
+    /* Toast notification (polished) */
+    .chat-toast {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      background: #ffffff;
+      color: #0f172a;
+      padding: 12px 16px;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(2,6,23,0.12);
+      z-index: 99999;
+      max-width: 92vw;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid rgba(15,23,42,0.06);
+      transform: translateY(-8px);
+      opacity: 0;
+      transition: transform .22s ease, opacity .22s ease;
+    }
+    
+    .chat-toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
 
     .btn-header {
       padding: 6px 12px;
@@ -354,6 +381,18 @@
       color: #94a3b8;
       margin-top: 3px;
       text-align: right;
+    }
+
+    .msg-status {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-left: 8px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .msg-status.read {
+      color: #2563eb; /* biru saat sudah dibaca */
     }
 
     /* NEGOSIASI BOX */
@@ -1171,6 +1210,21 @@
 
   if (!token) window.location.href = '/views/auth.html';
 
+  async function initNotificationPermission() {
+    try {
+      const result = await requestChatNotifications();
+      if (!result.supported) {
+        console.log('Browser notifikasi tidak didukung');
+      } else if (!result.granted) {
+        console.log('Izin notifikasi ditolak atau belum diputuskan');
+      }
+    } catch (err) {
+      console.warn('Gagal mengatur notifikasi:', err);
+    }
+  }
+
+  initNotificationPermission();
+
   // Setup Socket.io
   const socket = io();
   socket.emit('join', userId);
@@ -1194,6 +1248,24 @@
       scrollBawah();
     }
 
+    if (pesan.sender_id !== userId && !isCurrentThread) {
+      showChatNotification(pesan);
+      if (typeof window !== 'undefined') {
+        const toast = document.createElement('div');
+        toast.className = 'chat-toast';
+        toast.textContent = `${pesan.nama_sender || 'Pesan baru'}: ${pesan.isi || 'Ada pesan baru'}`;
+        document.body.appendChild(toast);
+        // force reflow then show animation
+        // eslint-disable-next-line no-unused-expressions
+        toast.offsetHeight;
+        toast.classList.add('show');
+        setTimeout(() => {
+          toast.classList.remove('show');
+          setTimeout(() => toast.remove(), 260);
+        }, 3500);
+      }
+    }
+
     loadDaftarChat();
   });
 
@@ -1206,6 +1278,21 @@
       audio.src = 'data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj==';
       audio.play().catch(() => {});
       showStatusMessage('⚠️ Ada penawaran harga baru dari ' + namaLawanAktif, 'info');
+    }
+  });
+
+  // Terima event read-receipt: pesan yang dikirim ke orang lain sudah dibaca
+  socket.on('messages_read', (data) => {
+    try {
+      if (!data || !Array.isArray(data.message_ids)) return;
+      data.message_ids.forEach(id => {
+        const el = document.querySelector(`.msg-status[data-mid="${id}"]`);
+        if (el) el.classList.add('read');
+      });
+      // Refresh daftar chat agar badge unread update
+      loadDaftarChat();
+    } catch (e) {
+      console.warn('Error handling messages_read:', e);
     }
   });
 
@@ -1529,14 +1616,17 @@
 
   const adminLabelHtml = (!dariku && isAdminSender) ? `<div style="font-size:11px;color:#7c3aed;font-weight:700;margin-bottom:4px">Admin</div>` : '';
 
-  div.innerHTML = `
+    div.innerHTML = `
       ${avatarHtml}
       <div>
-          ${adminLabelHtml}
-          <div class="bubble ${dariku ? 'bubble-saya' : 'bubble-lawan'}">${attachmentHtml}${textHtml}</div>
-          <div class="bubble-time" style="font-size:10px; color:#999; text-align: ${dariku ? 'right' : 'left'}">${waktu}</div>
+        ${adminLabelHtml}
+        <div class="bubble ${dariku ? 'bubble-saya' : 'bubble-lawan'}">${attachmentHtml}${textHtml}</div>
+        <div class="bubble-time" style="font-size:10px; color:#999; text-align: ${dariku ? 'right' : 'left'}">
+        ${waktu}
+        ${dariku ? `<span class="msg-status ${pesan.dibaca ? 'read' : ''}" data-mid="${pesan.id}">✓✓</span>` : ''}
+        </div>
       </div>
-  `;
+    `;
   wrap.appendChild(div);
 }
 

@@ -984,21 +984,20 @@
       }
 
       .detail-gallery {
-          position: relative;
-          overflow: hidden;
-          min-height: 300px;
+        position: relative;
+        overflow: hidden;
       }
 
-        .detail-gallery img {
-          width: 100%;
-          display: block;
-          opacity: 0;
-          position: absolute !important;
-          top: 0; left: 0; right: 0; bottom: 0;
-          object-fit: cover;
-          transition: opacity .25s ease;
-          cursor: zoom-in;
-        }
+      .detail-gallery img {
+        width: 100%;
+        display: block;
+        opacity: 0;
+        position: absolute;
+        inset: 0;
+        object-fit: cover;
+        transition: opacity .25s ease;
+        cursor: zoom-in;
+      }
 
       .detail-gallery img.active {
         opacity: 1;
@@ -1201,10 +1200,35 @@
       }
     }
   </style>
+  <style>
+    /* Toast notification (polished) - shared with chat */
+    .chat-toast {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      background: #ffffff;
+      color: #0f172a;
+      padding: 12px 16px;
+      border-radius: 12px;
+      box-shadow: 0 8px 30px rgba(2,6,23,0.12);
+      z-index: 99999;
+      max-width: 92vw;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid rgba(15,23,42,0.06);
+      transform: translateY(-8px);
+      opacity: 0;
+      transition: transform .22s ease, opacity .22s ease;
+    }
+
+    .chat-toast.show { transform: translateY(0); opacity: 1; }
+  </style>
   <link rel="stylesheet" href="/css/responsive-fixes.css">
 </head>
 <body>
 <script src="/socket.io/socket.io.js"></script>
+<script src="/js/notifications.js"></script>
 <script src="/js/auth.js"></script>
 <script>cekLogin();</script>
 
@@ -1348,6 +1372,17 @@
   if (!token) window.location.href = '/views/auth.html';
   document.getElementById('nama-user').textContent = namaUser;
 
+  async function initHomeNotifications() {
+    if (!token) return;
+    try {
+      await requestChatNotifications();
+    } catch (err) {
+      console.warn('Gagal mengatur notifikasi halaman utama:', err);
+    }
+  }
+
+  initHomeNotifications();
+
   let kategoriAktif = 'semua';
   let searchAktif = '';
   let sortAktif = 'terbaru';
@@ -1418,18 +1453,6 @@
         </div>
       `).join('');
       initPostSliders();
-      // Attach click handlers on each post-slider image so user can open lightbox directly from grid
-      document.querySelectorAll('.post-slider').forEach(containerEl => {
-        const id = containerEl.dataset.postId;
-        const imgs = Array.from(containerEl.querySelectorAll('img')).map(i => i.getAttribute('src'));
-        containerEl.querySelectorAll('img').forEach(imgEl => {
-          imgEl.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const src = imgEl.getAttribute('src');
-            showImageFull(src, imgs);
-          });
-        });
-      });
     } catch {
       container.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><div>Gagal memuat postingan</div></div>';
     }
@@ -1972,8 +1995,24 @@
       socket.emit('join', userId);
     });
 
-    socket.on('new_message', () => {
+    socket.on('new_message', (pesan) => {
       updateChatBadge();
+      if (pesan && pesan.sender_id !== Number(userId)) {
+        // On beranda always show notification/toast (don't rely on last_chat_thread_id here)
+        showChatNotification(pesan);
+        const toast = document.createElement('div');
+        toast.className = 'chat-toast';
+        toast.textContent = `${pesan.nama_sender || 'Pesan baru'}: ${pesan.isi || 'Ada pesan baru'}`;
+        document.body.appendChild(toast);
+        // force reflow then animate
+        // eslint-disable-next-line no-unused-expressions
+        toast.offsetHeight;
+        toast.classList.add('show');
+        setTimeout(() => {
+          toast.classList.remove('show');
+          setTimeout(() => toast.remove(), 260);
+        }, 3500);
+      }
     });
   }
 
